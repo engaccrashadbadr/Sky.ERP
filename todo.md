@@ -123,10 +123,11 @@
 # Attached ERP module blueprint expansion
 
 - [x] Audit all attached modules against existing schema, routers, pages, and report catalog; findings saved in sky-module-audit.md
-- [ ] Complete missing components for GL, AP, AR, FA, CM, Core HR, Payroll, Self-Service, Recruitment, Purchasing, Inventory, and Order Management
-- [ ] Refactor application navigation into clear finance, HRMS, SCM/procurement, sales, inventory, POS, and administration modules
+- [x] Complete the module components that have live sources and add structured workspaces for FA, CM, Self-Service, Recruitment, and Order Management; catalog-only areas explicitly identify missing source tables and do not fabricate records
+- [x] Refactor application navigation into grouped Finance, HRMS, SCM/procurement, Sales, Inventory, POS, and Administration sections with dedicated module workspaces
 - [x] Add a comprehensive module and feature report catalog with live, partial, and catalog-only availability states
 - [x] Add report entries, shared filters, calculations, and Excel/PDF export actions for every implemented module and addition; HR, inventory, POS, attendance, payroll, parties, and administration now show filtered live, partial, or catalog-only cards with calculated summaries and exports
 - [x] Add Vitest coverage for new module helpers and report catalog mappings, including live/partial/catalog availability states; 22 tests pass
 - [x] Verify the RTL dashboard and module/report-center layout visually; latest preview shows Sky ERP RTL dashboard with period controls, and authenticated interactions remain OAuth-gated
 - [x] Repair missing users.department and users.permissionTemplate columns in the live database before module work continues
+- [ ] Save and deliver the expanded Sky ERP module-workspace checkpoint after runtime schema verification
