@@ -15,6 +15,20 @@
       "when": 1786570177890,
       "tag": "0001_daffy_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786571875328,
+      "tag": "0002_grey_firestar",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1786572153898,
+      "tag": "0003_panoramic_peter_quill",
+      "breakpoints": true
     }
   ]
 }

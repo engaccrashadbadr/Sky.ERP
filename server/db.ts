@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { ENV } from "./_core/env";
-import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines } from "../drizzle/schema";
+import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies } from "../drizzle/schema";
 import { storagePut } from "./storage";
 import { notifyOwner } from "./_core/notification";
 
@@ -52,6 +52,10 @@ export async function getDashboardSummary() {
   const r = Number(revenue[0]?.value ?? 0), e = Number(expenses[0]?.value ?? 0);
   return { revenue: r, expenses: e, profit: r - e, receivables: Number(receivables[0]?.value ?? 0), invoiceCount: Number(invoiceCount[0]?.value ?? 0), lowStockCount: Number(lowStock[0]?.value ?? 0) };
 }
+
+export async function listCurrencies() { const db = await getDb(); return db ? db.select().from(currencies).where(eq(currencies.isActive, true)).orderBy(desc(currencies.isBase), currencies.code) : []; }
+export async function updateCurrency(input: { code: string; exchangeRate: string }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.update(currencies).set({ exchangeRate: input.exchangeRate }).where(eq(currencies.code, input.code)); }
+export async function importMasterRows(input: { accounts?: Array<{ code: string; name: string; category: "asset" | "liability" | "equity" | "revenue" | "expense"; openingBalance?: number }>; parties?: Array<{ type: "customer" | "supplier"; name: string; phone?: string; email?: string; taxNumber?: string; openingBalance?: number; creditLimit?: number; currencyCode?: string }> }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); let accountsImported = 0; let partiesImported = 0; const errors: Array<{ row: number; field: string; message: string }> = []; await db.transaction(async tx => { for (const { index, row } of (input.accounts ?? []).map((row, index) => ({ row, index }))) { if (!row.code.trim() || !row.name.trim()) { errors.push({ row: index + 2, field: "code/name", message: "كود الحساب واسم الحساب مطلوبان" }); continue; } if (!Number.isFinite(Number(row.openingBalance ?? 0))) { errors.push({ row: index + 2, field: "openingBalance", message: "الرصيد الافتتاحي غير صالح" }); continue; } try { await tx.insert(accounts).values({ code: row.code.trim(), name: row.name.trim(), category: row.category, openingBalance: Number(row.openingBalance ?? 0).toFixed(2) }); accountsImported++; } catch { errors.push({ row: index + 2, field: "code", message: `تعذر استيراد الحساب ${row.code}` }); } } for (const { index, row } of (input.parties ?? []).map((row, index) => ({ row, index }))) { if (!row.name.trim()) { errors.push({ row: index + 2, field: "name", message: "اسم العميل أو المورد مطلوب" }); continue; } await tx.insert(parties).values({ type: row.type, name: row.name.trim(), phone: row.phone, email: row.email, taxNumber: row.taxNumber, openingBalance: Number(row.openingBalance ?? 0).toFixed(2), creditLimit: Number(row.creditLimit ?? 0).toFixed(2), currencyCode: row.currencyCode ?? "SAR" }); partiesImported++; } }); return { accountsImported, partiesImported, errors }; }
 
 export async function listAccounts() { const db = await getDb(); return db ? db.select().from(accounts).orderBy(accounts.code) : []; }
 export async function listParties(type?: "customer" | "supplier") { const db = await getDb(); return db ? db.select().from(parties).where(type ? eq(parties.type, type) : undefined).orderBy(desc(parties.createdAt)) : []; }

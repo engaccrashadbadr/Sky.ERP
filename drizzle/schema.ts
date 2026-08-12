@@ -12,6 +12,17 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const currencies = mysqlTable("currencies", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 3 }).notNull().unique(),
+  name: varchar("name", { length: 80 }).notNull(),
+  symbol: varchar("symbol", { length: 8 }).notNull(),
+  exchangeRate: decimal("exchangeRate", { precision: 18, scale: 6 }).default("1").notNull(),
+  isBase: boolean("isBase").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export const accounts = mysqlTable("accounts", {
   id: int("id").autoincrement().primaryKey(),
   code: varchar("code", { length: 32 }).notNull().unique(),
@@ -19,6 +30,7 @@ export const accounts = mysqlTable("accounts", {
   category: mysqlEnum("category", ["asset", "liability", "equity", "revenue", "expense"]).notNull(),
   parentId: int("parentId"),
   isActive: boolean("isActive").default(true).notNull(),
+  openingBalance: decimal("openingBalance", { precision: 18, scale: 2 }).default("0").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -27,6 +39,8 @@ export const journalEntries = mysqlTable("journalEntries", {
   entryNumber: varchar("entryNumber", { length: 32 }).notNull().unique(),
   entryDate: timestamp("entryDate").notNull(),
   description: text("description").notNull(),
+  currencyCode: varchar("currencyCode", { length: 3 }).default("SAR").notNull(),
+  exchangeRate: decimal("exchangeRate", { precision: 18, scale: 6 }).default("1").notNull(),
   status: mysqlEnum("status", ["draft", "posted"]).default("draft").notNull(),
   createdBy: int("createdBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -50,6 +64,7 @@ export const parties = mysqlTable("parties", {
   taxNumber: varchar("taxNumber", { length: 80 }),
   creditLimit: decimal("creditLimit", { precision: 18, scale: 2 }).default("0").notNull(),
   openingBalance: decimal("openingBalance", { precision: 18, scale: 2 }).default("0").notNull(),
+  currencyCode: varchar("currencyCode", { length: 3 }).default("SAR").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -80,6 +95,9 @@ export const invoices = mysqlTable("invoices", {
   paid: decimal("paid", { precision: 18, scale: 2 }).default("0").notNull(),
   status: mysqlEnum("status", ["draft", "issued", "partially_paid", "paid", "overdue"]).default("draft").notNull(),
   notes: text("notes"),
+  currencyCode: varchar("currencyCode", { length: 3 }).default("SAR").notNull(),
+  exchangeRate: decimal("exchangeRate", { precision: 18, scale: 6 }).default("1").notNull(),
+  baseTotal: decimal("baseTotal", { precision: 18, scale: 2 }).default("0").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

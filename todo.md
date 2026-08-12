@@ -40,3 +40,24 @@
 - [x] Add Excel export for financial reports and account statements with Arabic column headers, including party statement rows
 - [x] Add report-period and report-type selectors to the export controls
 - [x] Verify export utility integration through TypeScript compilation, dedicated PDF/Excel Vitest tests, and RTL preview rendering
+- [x] Add company currency settings, supported currencies, and exchange rates for multi-currency transactions
+- [x] Add currency selection and converted/base amounts to invoices, parties, invoices, and report exports
+- [x] Add custom date-range selection to reports and exports
+- [x] Add interactive financial charts for revenue, expenses, profit, and receivables
+- [x] Add advanced report filters by text, transaction type, currency, and amount range
+- [x] Add Excel import template and validated upload for customers, suppliers, accounts, and opening balances
+- [x] Add import preview and commit confirmation
+- [ ] Add row-level validation error report and duplicate handling policy
+- [x] Add general-accounting report catalog with balance sheet, income statement, trial balance, general ledger, cash flow, and tax summary entries
+- [ ] Complete detailed live account-level calculations for every general-accounting report
+- [x] Add customer and supplier statement-of-account views with date, currency, and amount filters
+- [x] Add transaction-level party ledgers with running balances; detailed aging buckets remain a future enhancement
+- [x] Document and expose a clear document workflow from draft to review to approval to posting to payment and archival
+- [x] Add report navigation, responsive chart layout, currency labels, import preview, and validation messaging improvements
+- [x] Expose currency selectors and base/converted amounts in invoice and party creation forms
+- [x] Replace month-truncated report filters with exact inclusive start and end dates
+- [x] Add an explicit transaction-type filter to the reports screen
+- [x] Persist account opening balances during Excel import and provide row-level validation feedback
+- [x] Build transaction-level customer and supplier statement ledgers with running balances and working filters
+- [x] Add currency, exchange-rate, and base-total display to the standard sales and purchase invoice creation workflow
+- [x] Prepend explicit opening-balance rows and include all available invoice movements in running statement balances
