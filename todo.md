@@ -12,7 +12,8 @@
 - [x] Complete stock movement entry with inbound/outbound quantity updates and threshold-aware low-stock notification
 - [x] Add employee records and salary fields
 - [x] Add monthly payroll generation from active employee salaries
-- [ ] Add attendance and absence tracking
+- [x] Add attendance and absence tracking backend records and protected procedures
+- [x] Add attendance and absence management UI with employee selector, date, status, and history table
 - [x] Add financial-report navigation and report cards
 - [x] Implement live dashboard-backed financial report summary cards
 - [ ] Implement detailed balance sheet, income statement, trial balance, general ledger, cash flow, and tax report queries
@@ -20,7 +21,8 @@
 - [x] Add POS interface with barcode/search field, real cart state, quantity controls, and rapid product selection
 - [x] Complete POS cart checkout with persisted invoice creation and payment-total calculation
 - [x] Complete POS persisted invoice issuance
-- [ ] Add cash drawer session workflows
+- [x] Add cash drawer open, close, and session-list backend workflows
+- [x] Add cash drawer management UI in POS with opening, closing, and session status controls
 - [x] Add automatic owner notifications for unpaid invoices and outbound stock movements
 - [x] Add exact minimum-stock threshold evaluation notifications
 - [x] Add exact credit-limit breach notifications
@@ -63,3 +65,5 @@
 - [x] Prepend explicit opening-balance rows and include all available invoice movements in running statement balances
 - [x] Calculate credit exposure from opening balance plus all outstanding sales invoices and payments before alerting
 - [x] Add automated credit-limit tests for actual notification behavior with prior exposure, partial payments, and non-breaching invoices
+- [x] Refresh attendance history immediately after recording a new attendance status
+- [x] Add explicit attendance history loading, error, and empty states

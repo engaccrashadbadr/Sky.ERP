@@ -141,6 +141,25 @@ export const payrollRuns = mysqlTable("payrollRuns", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const attendanceRecords = mysqlTable("attendanceRecords", {
+  id: int("id").autoincrement().primaryKey(),
+  employeeId: int("employeeId").notNull(),
+  attendanceDate: timestamp("attendanceDate").notNull(),
+  status: mysqlEnum("status", ["present", "absent", "late", "leave"]).notNull(),
+  note: text("note"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const cashDrawerSessions = mysqlTable("cashDrawerSessions", {
+  id: int("id").autoincrement().primaryKey(),
+  openedAt: timestamp("openedAt").defaultNow().notNull(),
+  closedAt: timestamp("closedAt"),
+  openingAmount: decimal("openingAmount", { precision: 18, scale: 2 }).default("0").notNull(),
+  closingAmount: decimal("closingAmount", { precision: 18, scale: 2 }),
+  status: mysqlEnum("status", ["open", "closed"]).default("open").notNull(),
+  notes: text("notes"),
+});
+
 export const notifications = mysqlTable("notifications", {
   id: int("id").autoincrement().primaryKey(),
   kind: mysqlEnum("kind", ["credit_limit", "low_stock", "payment_due", "system"]).notNull(),
