@@ -119,3 +119,14 @@
 - [x] Apply the shared report period, party, currency, amount, and text filters plus Excel/PDF exports to live Oracle-aligned report cards, while catalog-only reports show an honest unavailable state
 - [x] Add Vitest coverage for the detailed financial calculations and Oracle report-catalog mappings; 19 tests pass
 - [x] Save and deliver the Oracle-aligned Sky ERP checkpoint
+
+# Attached ERP module blueprint expansion
+
+- [x] Audit all attached modules against existing schema, routers, pages, and report catalog; findings saved in sky-module-audit.md
+- [ ] Complete missing components for GL, AP, AR, FA, CM, Core HR, Payroll, Self-Service, Recruitment, Purchasing, Inventory, and Order Management
+- [ ] Refactor application navigation into clear finance, HRMS, SCM/procurement, sales, inventory, POS, and administration modules
+- [x] Add a comprehensive module and feature report catalog with live, partial, and catalog-only availability states
+- [x] Add report entries, shared filters, calculations, and Excel/PDF export actions for every implemented module and addition; HR, inventory, POS, attendance, payroll, parties, and administration now show filtered live, partial, or catalog-only cards with calculated summaries and exports
+- [x] Add Vitest coverage for new module helpers and report catalog mappings, including live/partial/catalog availability states; 22 tests pass
+- [x] Verify the RTL dashboard and module/report-center layout visually; latest preview shows Sky ERP RTL dashboard with period controls, and authenticated interactions remain OAuth-gated
+- [x] Repair missing users.department and users.permissionTemplate columns in the live database before module work continues
