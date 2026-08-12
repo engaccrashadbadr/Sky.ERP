@@ -16,7 +16,9 @@
 - [x] Add attendance and absence management UI with employee selector, date, status, and history table
 - [x] Add financial-report navigation and report cards
 - [x] Implement live dashboard-backed financial report summary cards
-- [ ] Implement detailed balance sheet, income statement, trial balance, general ledger, cash flow, and tax report queries
+- [x] Implement live trial-balance and general-ledger report queries
+- [x] Implement detailed balance-sheet sections, income-statement lines, and cash-flow movements
+- [x] Implement detailed tax-summary calculations with sales/purchase tax-type breakdowns, taxable totals, and net tax
 - [x] Add role enum, protected/admin tRPC foundations, and persisted administrator role updates
 - [x] Add POS interface with barcode/search field, real cart state, quantity controls, and rapid product selection
 - [x] Complete POS cart checkout with persisted invoice creation and payment-total calculation
@@ -27,11 +29,11 @@
 - [x] Add exact minimum-stock threshold evaluation notifications
 - [x] Add exact credit-limit breach notifications
 - [x] Add server-side Arabic AI assistant for accounting questions
-- [ ] Add journal classification and report suggestion actions
+- [x] Add journal classification and report suggestion actions in the Arabic AI assistant
 - [x] Add document attachment upload UI with selected-invoice linkage and S3-backed metadata persistence
 - [x] Add database schema, migration, query helpers, and typed tRPC procedures for implemented modules
 - [x] Add Vitest coverage for journal balancing and authentication logout
-- [ ] Add Vitest coverage for invoice totals, inventory movements, payroll, and permissions; journal, export, and credit-exposure coverage is complete
+- [ ] Add Vitest coverage for invoice totals, inventory movements, and payroll permissions; detailed balance-sheet, income-statement, cash-flow, tax, journal, export, and credit-exposure coverage is complete
 - [x] Verify responsive RTL UI structure, loading/empty states, TypeScript, core tests, and mobile screenshot rendering
 - [ ] Complete authenticated browser-flow verification for create, invoice, stock, payroll, attachment, and AI actions; protected mutations require a user OAuth session
 - [ ] Save final checkpoint and deliver the project version for preview/publishing by the user
@@ -51,7 +53,8 @@
 - [x] Add import preview and commit confirmation
 - [x] Add row-level validation error report and duplicate handling policy
 - [x] Add general-accounting report catalog with balance sheet, income statement, trial balance, general ledger, cash flow, and tax summary entries
-- [ ] Complete detailed live account-level calculations for every general-accounting report
+- [x] Complete detailed live account-level calculations for balance sheet, income statement, and cash flow
+- [x] Complete detailed live tax calculations and breakdowns
 - [x] Add customer and supplier statement-of-account views with date, currency, and amount filters
 - [x] Add transaction-level party ledgers with running balances; detailed aging buckets remain a future enhancement
 - [x] Document and expose a clear document workflow from draft to review to approval to posting to payment and archival
@@ -74,3 +77,12 @@
 - [x] Add a true parent/child account-tree view with hierarchy context
 - [x] Protect critical system/root accounts from deactivation with explicit Arabic validation
 - [x] Expand account deactivation dependency checks to linked journal records and child accounts
+- [x] Fix report query initialization order so exact date filters compile and load safely
+- [x] Recognize Arabic صندوق and cash-account naming variants in detailed cash-flow movement calculations
+- [x] Update reports UI to display totalTax, salesTax, purchaseTax, and netTax from the detailed tax summary
+- [x] Add tax-summary Vitest assertions for sales and purchase tax breakdowns
+- [x] Update detailed-report tests for the new sales and purchase tax-summary breakdown contract
+- [x] Render sales tax, purchase tax, and net tax values in the Arabic reports screen
+- [ ] Verify the visible tax breakdown in the reports UI after wiring the new fields and passing TypeScript/Vitest; dashboard shell verified, report subsection pending authenticated navigation
+- [x] Restart the development server after tax-summary changes and confirm no current TypeScript or startup transform errors
+- [ ] Verify the Arabic reports screen visually shows sales tax, purchase tax, and net tax cards; dashboard RTL shell verified, reports subsection still requires an authenticated navigation check

@@ -5,7 +5,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { accounts, employees, journalEntries, parties, products } from "../drizzle/schema";
-import { closeCashDrawer, createAccount, updateAccount, deactivateAccount, createPartyPayment, listPartyPayments, getPartyStatement, createAttendance, createEmployee, createInvoice, createJournalEntry, createParty, createProduct, createPayrollRun, createStockMove, getDashboardSummary, listAccounts, listAttendance, listCashDrawerSessions, listEmployees, listInvoices, listJournalEntries, listNotifications, listParties, listProducts, listCurrencies, openCashDrawer, saveAttachment, updateCurrency, updateUserRole, importMasterRows } from "./db";
+import { closeCashDrawer, createAccount, updateAccount, deactivateAccount, createPartyPayment, listPartyPayments, getPartyStatement, createAttendance, createEmployee, createInvoice, createJournalEntry, createParty, createProduct, createPayrollRun, createStockMove, getDashboardSummary, getFinancialReports, listAccounts, listAttendance, listCashDrawerSessions, listEmployees, listInvoices, listJournalEntries, listNotifications, listParties, listProducts, listCurrencies, openCashDrawer, saveAttachment, updateCurrency, updateUserRole, importMasterRows } from "./db";
 
 const accountInput = z.object({ code: z.string().min(1), name: z.string().min(2), category: z.enum(["asset", "liability", "equity", "revenue", "expense"]), parentId: z.number().optional() });
 const partyInput = z.object({ type: z.enum(["customer", "supplier"]), name: z.string().min(2), phone: z.string().optional(), email: z.string().email().optional().or(z.literal("")), taxNumber: z.string().optional(), creditLimit: z.coerce.number().min(0).default(0), openingBalance: z.coerce.number().default(0), currencyCode: z.string().length(3).default("SAR") });
@@ -18,6 +18,7 @@ const attendanceInput = z.object({ employeeId: z.number(), attendanceDate: z.coe
 const paymentInput = z.object({ partyId: z.number().int().positive(), invoiceId: z.number().int().positive().optional(), amount: z.coerce.number().positive(), paymentDate: z.coerce.date().optional(), method: z.string().min(2).default("cash"), note: z.string().optional() });
 
 export const appRouter = router({
+  reports: router({ financial: protectedProcedure.input(z.object({ from: z.coerce.date().optional(), to: z.coerce.date().optional() }).optional()).query(({ input }) => getFinancialReports(input ?? {})) }),
   system: systemRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -47,6 +48,16 @@ export const appRouter = router({
       });
       const content = response.choices[0]?.message?.content;
       return { answer: typeof content === "string" ? content : "تعذر الحصول على إجابة حالياً." };
+    }),
+    classifyJournal: protectedProcedure.input(z.object({ description: z.string().min(2), amount: z.coerce.number().nonnegative(), context: z.string().optional() })).mutation(async ({ input }) => {
+      const response = await invokeLLM({ model: "gpt-5-mini", messages: [{ role: "system", content: "أنت محاسب عربي. صنّف الحركة إلى حساب مدين وحساب دائن مقترحين، مع سبب مختصر وتحذير بأن الاقتراح يحتاج مراجعة محاسب." }, { role: "user", content: `البيان: ${input.description}\nالمبلغ: ${input.amount}\n${input.context ?? ""}` }], maxTokens: 500 });
+      const content = response.choices[0]?.message?.content;
+      return { suggestion: typeof content === "string" ? content : "تعذر إنشاء التصنيف حالياً." };
+    }),
+    suggestReports: protectedProcedure.input(z.object({ goal: z.string().min(2), period: z.string().optional() })).mutation(async ({ input }) => {
+      const response = await invokeLLM({ model: "gpt-5-mini", messages: [{ role: "system", content: "أنت مستشار تقارير مالية عربي. اقترح تقارير محاسبية مناسبة لهدف المستخدم، واذكر سبب استخدام كل تقرير، دون اختراع أرقام." }, { role: "user", content: `الهدف: ${input.goal}\nالفترة: ${input.period ?? "غير محددة"}` }], maxTokens: 500 });
+      const content = response.choices[0]?.message?.content;
+      return { suggestion: typeof content === "string" ? content : "تعذر اقتراح التقارير حالياً." };
     }),
   }),
   admin: router({ setRole: adminProcedure.input(z.object({ userId: z.number(), role: z.enum(["user", "accountant", "admin"]) })).mutation(async ({ input, ctx }) => { if (input.userId === ctx.user.id && input.role !== "admin") throw new Error("لا يمكن للمدير إلغاء صلاحية حسابه الحالي"); await updateUserRole(input.userId, input.role); return { success: true }; }) }),
