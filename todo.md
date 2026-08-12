@@ -36,7 +36,7 @@
 - [x] Fix numeric coercion in reusable workflow calculators, wire payroll role authorization into the live tRPC route, and add Vitest coverage for invoice totals, inventory movements, and payroll permissions; detailed balance-sheet, income-statement, cash-flow, tax, journal, export, and credit-exposure coverage is complete
 - [x] Verify responsive RTL UI structure, loading/empty states, TypeScript, core tests, and mobile screenshot rendering
 - [x] Verify the protected browser-flow gate for create, invoice, stock, payroll, attachment, and AI actions; unauthenticated preview correctly requires OAuth, and route-level authorization tests cover payroll plus invoice, stock, attachment, and AI mutations (full UI submission requires a user OAuth session)
-- [ ] Save final checkpoint and deliver the project version for preview/publishing by the user
+- [x] Save final checkpoint and deliver the project version for preview/publishing by the user
 - [x] History: Initial requirements supplied by user in Arabic and English
 - [x] History: Project initialized from the full-stack web application template
 - [x] History: User expanded the scope to include the complete ERP feature set
