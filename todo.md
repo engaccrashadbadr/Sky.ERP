@@ -23,13 +23,13 @@
 - [ ] Add cash drawer session workflows
 - [x] Add automatic owner notifications for unpaid invoices and outbound stock movements
 - [x] Add exact minimum-stock threshold evaluation notifications
-- [ ] Add exact credit-limit breach notifications
+- [x] Add exact credit-limit breach notifications
 - [x] Add server-side Arabic AI assistant for accounting questions
 - [ ] Add journal classification and report suggestion actions
 - [x] Add document attachment upload UI with selected-invoice linkage and S3-backed metadata persistence
 - [x] Add database schema, migration, query helpers, and typed tRPC procedures for implemented modules
 - [x] Add Vitest coverage for journal balancing and authentication logout
-- [ ] Add Vitest coverage for invoice totals, inventory movements, payroll, and permissions
+- [ ] Add Vitest coverage for invoice totals, inventory movements, payroll, and permissions; journal, export, and credit-exposure coverage is complete
 - [x] Verify responsive RTL UI structure, loading/empty states, TypeScript, core tests, and mobile screenshot rendering
 - [ ] Complete authenticated browser-flow verification for create, invoice, stock, payroll, attachment, and AI actions; protected mutations require a user OAuth session
 - [ ] Save final checkpoint and deliver the project version for preview/publishing by the user
@@ -47,7 +47,7 @@
 - [x] Add advanced report filters by text, transaction type, currency, and amount range
 - [x] Add Excel import template and validated upload for customers, suppliers, accounts, and opening balances
 - [x] Add import preview and commit confirmation
-- [ ] Add row-level validation error report and duplicate handling policy
+- [x] Add row-level validation error report and duplicate handling policy
 - [x] Add general-accounting report catalog with balance sheet, income statement, trial balance, general ledger, cash flow, and tax summary entries
 - [ ] Complete detailed live account-level calculations for every general-accounting report
 - [x] Add customer and supplier statement-of-account views with date, currency, and amount filters
@@ -61,3 +61,5 @@
 - [x] Build transaction-level customer and supplier statement ledgers with running balances and working filters
 - [x] Add currency, exchange-rate, and base-total display to the standard sales and purchase invoice creation workflow
 - [x] Prepend explicit opening-balance rows and include all available invoice movements in running statement balances
+- [x] Calculate credit exposure from opening balance plus all outstanding sales invoices and payments before alerting
+- [x] Add automated credit-limit tests for actual notification behavior with prior exposure, partial payments, and non-breaching invoices
