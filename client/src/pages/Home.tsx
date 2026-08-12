@@ -35,7 +35,9 @@ function MetricCard({ title, value, caption, icon: Icon, tone }: { title: string
 
 export default function Home() {
   const { user, loading, isAuthenticated, logout } = useAuth();
-  const [active, setActive] = useState("dashboard");
+  const [section, setSection] = useState(() => new URLSearchParams(window.location.search).get("section") || "dashboard");
+  const active = section;
+  const setActive = setSection;
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showQuick, setShowQuick] = useState(false);
   const { data: summary } = trpc.dashboard.summary.useQuery(undefined, { enabled: isAuthenticated });

@@ -83,6 +83,7 @@
 - [x] Add tax-summary Vitest assertions for sales and purchase tax breakdowns
 - [x] Update detailed-report tests for the new sales and purchase tax-summary breakdown contract
 - [x] Render sales tax, purchase tax, and net tax values in the Arabic reports screen
-- [ ] Verify the visible tax breakdown in the reports UI after wiring the new fields and passing TypeScript/Vitest; dashboard shell verified, report subsection pending authenticated navigation
+- [x] Verify the visible tax breakdown in the reports UI after wiring the new fields and passing TypeScript/Vitest; direct reports screenshot evidence saved in reports-preview-verification.md
 - [x] Restart the development server after tax-summary changes and confirm no current TypeScript or startup transform errors
-- [ ] Verify the Arabic reports screen visually shows sales tax, purchase tax, and net tax cards; dashboard RTL shell verified, reports subsection still requires an authenticated navigation check
+- [x] Verify the Arabic reports screen visually shows sales tax, purchase tax, and net tax cards in the direct reports preview
+- [x] Restore the active navigation section declaration after adding the reports preview query parameter
