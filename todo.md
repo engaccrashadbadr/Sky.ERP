@@ -1,0 +1,32 @@
+# Project TODO
+
+- [x] Establish Arabic RTL application shell and professional financial-management design system
+- [x] Build main dashboard with revenue, expenses, profit, receivables, and alerts summaries
+- [x] Add chart of accounts list with categories and create operation
+- [ ] Complete chart of accounts tree editing and deletion with safeguards
+- [x] Add journal-entry workflow with debit/credit balancing validation and account linking, including live entry form UI
+- [ ] Add sales and purchase invoices with tax, discount, status, and payment tracking
+- [x] Add customer and supplier records with credit-limit and opening-balance fields in the quick-create UI
+- [ ] Complete party transaction history and outstanding-balance drill-down
+- [x] Add inventory products, quantities, and minimum thresholds in the quick-create UI
+- [ ] Complete stock movement entry and valuation workflows
+- [x] Add employee records and salary fields
+- [ ] Add attendance, absence tracking, and monthly payroll generation
+- [x] Add financial-report navigation and report cards
+- [ ] Implement live balance sheet, income statement, trial balance, general ledger, cash flow, and tax report queries
+- [x] Add role enum, protected/admin tRPC foundations, and persisted administrator role updates
+- [x] Add POS interface with barcode/search field, real cart state, quantity controls, and rapid product selection
+- [ ] Complete invoice issuance, payment capture, and cash drawer session workflows
+- [ ] Add automatic owner notifications for credit-limit breaches, low stock, and due payments
+- [x] Add server-side Arabic AI assistant for accounting questions
+- [ ] Add journal classification and report suggestion actions
+- [ ] Add document attachments linked to transactions and stored through the project file-storage layer
+- [x] Add database schema, migration, query helpers, and typed tRPC procedures for implemented modules
+- [x] Add Vitest coverage for journal balancing and authentication logout
+- [ ] Add Vitest coverage for invoice totals, inventory movements, and permissions
+- [x] Verify responsive RTL UI structure, loading/empty states, TypeScript, core tests, and mobile screenshot rendering
+- [ ] Complete authenticated browser-flow verification for create and AI actions; preview currently renders dashboard on mobile and may require user OAuth session for protected mutations
+- [ ] Save final checkpoint and deliver the project version for preview/publishing by the user
+- [x] History: Initial requirements supplied by user in Arabic and English
+- [x] History: Project initialized from the full-stack web application template
+- [x] History: User expanded the scope to include the complete ERP feature set
