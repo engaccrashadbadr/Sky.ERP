@@ -1,7 +1,9 @@
 import { and, desc, eq, lt, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { ENV } from "./_core/env";
-import { InsertUser, users, accounts, parties, products, invoices, employees, notifications, journalEntries, journalLines } from "../drizzle/schema";
+import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines } from "../drizzle/schema";
+import { storagePut } from "./storage";
+import { notifyOwner } from "./_core/notification";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -69,6 +71,11 @@ export function validateBalancedEntry(lines: Array<{ debit?: string | number | n
   if (Math.abs(debit - credit) > 0.005) throw new Error("يجب أن يتساوى إجمالي المدين مع إجمالي الدائن");
   return { debit, credit, balanced: true };
 }
+
+export async function createInvoice(invoice: typeof invoices.$inferInsert, lines: Array<Omit<typeof invoiceLines.$inferInsert, "invoiceId">>) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); const id = await db.transaction(async tx => { const result = await tx.insert(invoices).values(invoice); const createdId = Number(result[0].insertId); if (lines.length) await tx.insert(invoiceLines).values(lines.map(line => ({ ...line, invoiceId: createdId }))); return createdId; }); if (Number(invoice.paid ?? 0) < Number(invoice.total ?? 0)) void notifyOwner({ title: "فاتورة مستحقة", content: `تم إصدار الفاتورة ${invoice.invoiceNumber} بإجمالي ${invoice.total} وتحتاج إلى متابعة التحصيل.` }); return id; }
+export async function createStockMove(input: typeof stockMoves.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); const result = await db.transaction(async tx => { await tx.insert(stockMoves).values(input); const delta = input.type === "out" ? -Number(input.quantity) : Number(input.quantity); await tx.update(products).set({ quantity: sql`quantity + ${delta}` }).where(eq(products.id, input.productId)); return true; }); const [product] = await db.select({ name: products.name, quantity: products.quantity, minQuantity: products.minQuantity }).from(products).where(eq(products.id, input.productId)).limit(1); if (product && Number(product.quantity) < Number(product.minQuantity)) void notifyOwner({ title: "تنبيه انخفاض المخزون", content: `الصنف ${product.name} أصبح عند كمية ${product.quantity} وهي أقل من الحد الأدنى ${product.minQuantity}.` }); return result; }
+export async function createPayrollRun(input: { period: string }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); const active = await db.select({ id: employees.id, salary: employees.baseSalary }).from(employees).where(eq(employees.isActive, true)); const total = active.reduce((sum, employee) => sum + Number(employee.salary), 0); return db.insert(payrollRuns).values({ period: input.period, employeeCount: active.length, totalAmount: total.toFixed(2), status: "processed" }); }
+export async function saveAttachment(input: { entityType: string; entityId: number; fileName: string; mimeType?: string; data: string }) { const buffer = Buffer.from(input.data, "base64"); const uploaded = await storagePut(`attachments/${input.entityType}/${input.fileName}`, buffer, input.mimeType ?? "application/octet-stream"); const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); await db.insert(attachments).values({ entityType: input.entityType, entityId: input.entityId, fileName: input.fileName, fileKey: uploaded.key, url: uploaded.url, mimeType: input.mimeType }); return uploaded; }
 
 export async function createJournalEntry(entry: typeof journalEntries.$inferInsert, lines: Array<Omit<typeof journalLines.$inferInsert, "journalEntryId">>) {
   const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة");

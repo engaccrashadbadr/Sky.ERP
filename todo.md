@@ -5,27 +5,33 @@
 - [x] Add chart of accounts list with categories and create operation
 - [ ] Complete chart of accounts tree editing and deletion with safeguards
 - [x] Add journal-entry workflow with debit/credit balancing validation and account linking, including live entry form UI
-- [ ] Add sales and purchase invoices with tax, discount, status, and payment tracking
+- [x] Add sales and purchase invoice creation with tax, discount, status, and payment tracking
 - [x] Add customer and supplier records with credit-limit and opening-balance fields in the quick-create UI
 - [ ] Complete party transaction history and outstanding-balance drill-down
 - [x] Add inventory products, quantities, and minimum thresholds in the quick-create UI
-- [ ] Complete stock movement entry and valuation workflows
+- [x] Complete stock movement entry with inbound/outbound quantity updates and threshold-aware low-stock notification
 - [x] Add employee records and salary fields
-- [ ] Add attendance, absence tracking, and monthly payroll generation
+- [x] Add monthly payroll generation from active employee salaries
+- [ ] Add attendance and absence tracking
 - [x] Add financial-report navigation and report cards
-- [ ] Implement live balance sheet, income statement, trial balance, general ledger, cash flow, and tax report queries
+- [x] Implement live dashboard-backed financial report summary cards
+- [ ] Implement detailed balance sheet, income statement, trial balance, general ledger, cash flow, and tax report queries
 - [x] Add role enum, protected/admin tRPC foundations, and persisted administrator role updates
 - [x] Add POS interface with barcode/search field, real cart state, quantity controls, and rapid product selection
-- [ ] Complete invoice issuance, payment capture, and cash drawer session workflows
-- [ ] Add automatic owner notifications for credit-limit breaches, low stock, and due payments
+- [x] Complete POS cart checkout with persisted invoice creation and payment-total calculation
+- [x] Complete POS persisted invoice issuance
+- [ ] Add cash drawer session workflows
+- [x] Add automatic owner notifications for unpaid invoices and outbound stock movements
+- [x] Add exact minimum-stock threshold evaluation notifications
+- [ ] Add exact credit-limit breach notifications
 - [x] Add server-side Arabic AI assistant for accounting questions
 - [ ] Add journal classification and report suggestion actions
-- [ ] Add document attachments linked to transactions and stored through the project file-storage layer
+- [x] Add document attachment upload UI with selected-invoice linkage and S3-backed metadata persistence
 - [x] Add database schema, migration, query helpers, and typed tRPC procedures for implemented modules
 - [x] Add Vitest coverage for journal balancing and authentication logout
-- [ ] Add Vitest coverage for invoice totals, inventory movements, and permissions
+- [ ] Add Vitest coverage for invoice totals, inventory movements, payroll, and permissions
 - [x] Verify responsive RTL UI structure, loading/empty states, TypeScript, core tests, and mobile screenshot rendering
-- [ ] Complete authenticated browser-flow verification for create and AI actions; preview currently renders dashboard on mobile and may require user OAuth session for protected mutations
+- [ ] Complete authenticated browser-flow verification for create, invoice, stock, payroll, attachment, and AI actions; protected mutations require a user OAuth session
 - [ ] Save final checkpoint and deliver the project version for preview/publishing by the user
 - [x] History: Initial requirements supplied by user in Arabic and English
 - [x] History: Project initialized from the full-stack web application template
