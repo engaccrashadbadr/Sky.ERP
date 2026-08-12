@@ -36,6 +36,13 @@
       "when": 1786572693812,
       "tag": "0004_known_may_parker",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1786573296685,
+      "tag": "0005_slim_moon_knight",
+      "breakpoints": true
     }
   ]
 }

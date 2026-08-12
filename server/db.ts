@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { ENV } from "./_core/env";
-import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions } from "../drizzle/schema";
+import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments } from "../drizzle/schema";
 import { storagePut } from "./storage";
 import { notifyOwner } from "./_core/notification";
 
@@ -66,7 +66,25 @@ export async function listNotifications() { const db = await getDb(); return db 
 export async function listJournalEntries() { const db = await getDb(); return db ? db.select().from(journalEntries).orderBy(desc(journalEntries.entryDate)).limit(50) : []; }
 
 export async function createAccount(input: typeof accounts.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(accounts).values(input); }
+export async function updateAccount(input: { id: number; code: string; name: string; category: "asset" | "liability" | "equity" | "revenue" | "expense"; parentId?: number | null }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); if (input.parentId === input.id) throw new Error("لا يمكن جعل الحساب أباً لنفسه"); const duplicate = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, input.code.trim())).limit(1); if (duplicate[0] && duplicate[0].id !== input.id) throw new Error("كود الحساب مستخدم بالفعل"); const critical = new Set(["1000", "2000", "3000", "4000", "5000"]); if (critical.has(input.code.trim()) && input.parentId !== null && input.parentId !== undefined) throw new Error("الحسابات الرئيسية لا يمكن نقلها تحت حساب فرعي"); let cursor = input.parentId ?? null; const visited = new Set<number>(); while (cursor !== null) { if (cursor === input.id || visited.has(cursor)) throw new Error("إعادة الترتيب ستنشئ دورة في شجرة الحسابات"); visited.add(cursor); const parent = await db.select({ parentId: accounts.parentId }).from(accounts).where(eq(accounts.id, cursor)).limit(1); cursor = parent[0]?.parentId ?? null; } return db.update(accounts).set({ code: input.code.trim(), name: input.name.trim(), category: input.category, parentId: input.parentId ?? null }).where(eq(accounts.id, input.id)); }
+export async function deactivateAccount(id: number) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); const account = await db.select({ code: accounts.code }).from(accounts).where(eq(accounts.id, id)).limit(1); if (["1000", "2000", "3000", "4000", "5000"].includes(account[0]?.code ?? "")) throw new Error("لا يمكن إيقاف حساب رئيسي محمي للنظام"); const children = await db.select({ id: accounts.id }).from(accounts).where(eq(accounts.parentId, id)).limit(1); if (children.length) throw new Error("لا يمكن إيقاف حساب له حسابات فرعية"); const lines = await db.select({ id: journalLines.id }).from(journalLines).where(eq(journalLines.accountId, id)).limit(1); if (lines.length) throw new Error("لا يمكن إيقاف حساب مستخدم في قيود محاسبية"); return db.update(accounts).set({ isActive: false }).where(eq(accounts.id, id)); }
 export async function createParty(input: typeof parties.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(parties).values(input); }
+export async function createPartyPayment(input: typeof partyPayments.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); if (Number(input.amount) <= 0) throw new Error("قيمة التسوية يجب أن تكون أكبر من صفر"); return db.insert(partyPayments).values(input); }
+export async function listPartyPayments(partyId?: number) { const db = await getDb(); return db ? (partyId ? db.select().from(partyPayments).where(eq(partyPayments.partyId, partyId)).orderBy(desc(partyPayments.paymentDate)) : db.select().from(partyPayments).orderBy(desc(partyPayments.paymentDate)).limit(200)) : []; }
+export async function getPartyStatement(partyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const party = await db.select({ openingBalance: parties.openingBalance }).from(parties).where(eq(parties.id, partyId)).limit(1);
+  const partyInvoices = await db.select({ invoiceNumber: invoices.invoiceNumber, invoiceDate: invoices.invoiceDate, total: invoices.total, type: invoices.type }).from(invoices).where(eq(invoices.partyId, partyId));
+  const settlements = await db.select().from(partyPayments).where(eq(partyPayments.partyId, partyId));
+  const rows = [
+    { date: new Date(0), kind: "opening", reference: "الرصيد الافتتاحي", debit: Number(party[0]?.openingBalance ?? 0), credit: 0, note: "رصيد افتتاحي" },
+    ...partyInvoices.map(invoice => ({ date: invoice.invoiceDate, kind: "invoice", reference: invoice.invoiceNumber, debit: invoice.type === "sale" ? Number(invoice.total) : 0, credit: invoice.type === "purchase" ? Number(invoice.total) : 0, note: `فاتورة ${invoice.type === "sale" ? "مبيعات" : "مشتريات"}` })),
+    ...settlements.map(payment => ({ date: payment.paymentDate, kind: "payment", reference: `تسوية #${payment.id}`, debit: 0, credit: Number(payment.amount), note: payment.note ?? `تسوية ${payment.method}` })),
+  ].sort((a, b) => a.date.getTime() - b.date.getTime());
+  let running = 0;
+  return rows.map(row => { running += row.debit - row.credit; return { ...row, running }; });
+}
 export async function createProduct(input: typeof products.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(products).values(input); }
 export async function createEmployee(input: typeof employees.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(employees).values(input); }
 export function calculateCreditExposure(openingBalance: number, movements: Array<{ total?: string | number | null; paid?: string | number | null }>) { return Number(openingBalance || 0) + movements.reduce((sum, movement) => sum + Math.max(0, Number(movement.total || 0) - Number(movement.paid || 0)), 0); }

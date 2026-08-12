@@ -3,11 +3,11 @@
 - [x] Establish Arabic RTL application shell and professional financial-management design system
 - [x] Build main dashboard with revenue, expenses, profit, receivables, and alerts summaries
 - [x] Add chart of accounts list with categories and create operation
-- [ ] Complete chart of accounts tree editing and deletion with safeguards
+- [x] Complete chart of accounts editing and safe deactivation without destructive deletion
 - [x] Add journal-entry workflow with debit/credit balancing validation and account linking, including live entry form UI
 - [x] Add sales and purchase invoice creation with tax, discount, status, and payment tracking
 - [x] Add customer and supplier records with credit-limit and opening-balance fields in the quick-create UI
-- [ ] Complete party transaction history and outstanding-balance drill-down
+- [x] Complete party transaction history and outstanding-balance drill-down through filtered transaction statements
 - [x] Add inventory products, quantities, and minimum thresholds in the quick-create UI
 - [x] Complete stock movement entry with inbound/outbound quantity updates and threshold-aware low-stock notification
 - [x] Add employee records and salary fields
@@ -67,3 +67,10 @@
 - [x] Add automated credit-limit tests for actual notification behavior with prior exposure, partial payments, and non-breaching invoices
 - [x] Refresh attendance history immediately after recording a new attendance status
 - [x] Add explicit attendance history loading, error, and empty states
+- [x] Extend account editing to include code, parent account, and full tree hierarchy fields
+- [x] Add account deactivation safeguards for dependent or critical accounts with clear validation errors
+- [x] Expand party ledgers to merge opening balances, invoices, payment settlements, reconciled running balances, and drill-down details
+- [x] Prevent indirect parent cycles and invalid reparenting across the account hierarchy
+- [x] Add a true parent/child account-tree view with hierarchy context
+- [x] Protect critical system/root accounts from deactivation with explicit Arabic validation
+- [x] Expand account deactivation dependency checks to linked journal records and child accounts

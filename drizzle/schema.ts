@@ -101,6 +101,17 @@ export const invoices = mysqlTable("invoices", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const partyPayments = mysqlTable("partyPayments", {
+  id: int("id").autoincrement().primaryKey(),
+  partyId: int("partyId").notNull(),
+  invoiceId: int("invoiceId"),
+  amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+  paymentDate: timestamp("paymentDate").defaultNow().notNull(),
+  method: varchar("method", { length: 40 }).default("cash").notNull(),
+  note: text("note"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export const invoiceLines = mysqlTable("invoiceLines", {
   id: int("id").autoincrement().primaryKey(),
   invoiceId: int("invoiceId").notNull(),
