@@ -36,3 +36,7 @@
 - [x] History: Initial requirements supplied by user in Arabic and English
 - [x] History: Project initialized from the full-stack web application template
 - [x] History: User expanded the scope to include the complete ERP feature set
+- [x] Add PDF export for financial reports and account statements with Arabic RTL formatting through a print-ready RTL document, including party statement rows
+- [x] Add Excel export for financial reports and account statements with Arabic column headers, including party statement rows
+- [x] Add report-period and report-type selectors to the export controls
+- [x] Verify export utility integration through TypeScript compilation, dedicated PDF/Excel Vitest tests, and RTL preview rendering
