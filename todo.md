@@ -130,4 +130,4 @@
 - [x] Add Vitest coverage for new module helpers and report catalog mappings, including live/partial/catalog availability states; 22 tests pass
 - [x] Verify the RTL dashboard and module/report-center layout visually; latest preview shows Sky ERP RTL dashboard with period controls, and authenticated interactions remain OAuth-gated
 - [x] Repair missing users.department and users.permissionTemplate columns in the live database before module work continues
-- [ ] Save and deliver the expanded Sky ERP module-workspace checkpoint after runtime schema verification
+- [x] Save and deliver the expanded Sky ERP module-workspace checkpoint after runtime schema verification
