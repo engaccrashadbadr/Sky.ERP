@@ -27,15 +27,16 @@ const requireUser = t.middleware(async opts => {
 
 export const protectedProcedure = t.procedure.use(requireUser);
 
-export const payrollProcedure = t.procedure.use(
-  t.middleware(async opts => {
-    const { ctx, next } = opts;
-    if (!ctx.user || !["admin", "accountant"].includes(ctx.user.role)) {
-      throw new TRPCError({ code: "FORBIDDEN", message: "لا تملك صلاحية تشغيل مسير الرواتب" });
-    }
-    return next({ ctx: { ...ctx, user: ctx.user } });
-  }),
-);
+const requireTemplates = (templates: string[], message: string) => t.middleware(async opts => {
+  const { ctx, next } = opts;
+  const allowed = ctx.user && (ctx.user.role === "admin" || ctx.user.role === "accountant" && templates.includes("المحاسبة") || templates.includes(ctx.user.permissionTemplate ?? "") || templates.includes("تشغيل عام") && ctx.user.permissionTemplate === "تشغيل عام");
+  if (!ctx.user || !allowed) throw new TRPCError({ code: "FORBIDDEN", message });
+  return next({ ctx: { ...ctx, user: ctx.user } });
+});
+
+export const payrollProcedure = t.procedure.use(requireUser).use(requireTemplates(["المحاسبة"], "لا تملك صلاحية تشغيل مسير الرواتب"));
+export const operationsProcedure = t.procedure.use(requireUser).use(requireTemplates(["المبيعات", "المشتريات", "المخزون", "نقطة البيع", "تشغيل عام"], "لا تملك صلاحية تنفيذ هذه العملية التشغيلية"));
+export const aiProcedure = t.procedure.use(requireUser).use(requireTemplates(["المحاسبة", "تشغيل عام", "قراءة فقط"], "لا تملك صلاحية استخدام المساعد المحاسبي"));
 
 export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {

@@ -1,5 +1,6 @@
 import { and, desc, eq, lt, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
+import { lte } from "drizzle-orm";
 import { ENV } from "./_core/env";
 import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments } from "../drizzle/schema";
 import { storagePut } from "./storage";
@@ -32,6 +33,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 }
 
 export async function updateUserRole(userId: number, role: "user" | "accountant" | "admin") { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.update(users).set({ role, updatedAt: new Date() }).where(eq(users.id, userId)); }
+export async function listUsers() { const db = await getDb(); return db ? db.select({ id: users.id, name: users.name, email: users.email, role: users.role, department: users.department, permissionTemplate: users.permissionTemplate, lastSignedIn: users.lastSignedIn }).from(users).orderBy(desc(users.lastSignedIn)) : []; }
+export async function updateUserAccess(input: { userId: number; department?: string; permissionTemplate?: string }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.update(users).set({ department: input.department, permissionTemplate: input.permissionTemplate ?? "تشغيل عام", updatedAt: new Date() }).where(eq(users.id, input.userId)); }
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb(); if (!db) return undefined;
@@ -39,23 +42,52 @@ export async function getUserByOpenId(openId: string) {
   return rows[0];
 }
 
-export async function getDashboardSummary() {
+export async function getDashboardSummary(input: { from?: Date; to?: Date } = {}) {
   const db = await getDb();
-  if (!db) return { revenue: 0, expenses: 0, profit: 0, receivables: 0, invoiceCount: 0, lowStockCount: 0 };
-  const [revenue, expenses, receivables, invoiceCount, lowStock] = await Promise.all([
-    db.select({ value: sql<string>`coalesce(sum(${invoices.total}), 0)` }).from(invoices).where(and(eq(invoices.type, "sale"), or(eq(invoices.status, "issued"), eq(invoices.status, "paid"), eq(invoices.status, "partially_paid")))),
-    db.select({ value: sql<string>`coalesce(sum(${invoices.total}), 0)` }).from(invoices).where(and(eq(invoices.type, "purchase"), or(eq(invoices.status, "issued"), eq(invoices.status, "paid"), eq(invoices.status, "partially_paid")))),
-    db.select({ value: sql<string>`coalesce(sum(${invoices.total} - ${invoices.paid}), 0)` }).from(invoices).where(and(eq(invoices.type, "sale"), or(eq(invoices.status, "issued"), eq(invoices.status, "partially_paid"), eq(invoices.status, "overdue")))),
-    db.select({ value: sql<number>`count(*)` }).from(invoices),
-    db.select({ value: sql<number>`count(*)` }).from(products).where(and(eq(products.isActive, true), lt(products.quantity, products.minQuantity))),
-  ]);
-  const r = Number(revenue[0]?.value ?? 0), e = Number(expenses[0]?.value ?? 0);
-  return { revenue: r, expenses: e, profit: r - e, receivables: Number(receivables[0]?.value ?? 0), invoiceCount: Number(invoiceCount[0]?.value ?? 0), lowStockCount: Number(lowStock[0]?.value ?? 0) };
+  if (!db) return { revenue: 0, expenses: 0, profit: 0, receivables: 0, invoiceCount: 0, lowStockCount: 0, from: input.from ?? null, to: input.to ?? null };
+  const rows = await db.select({ type: invoices.type, invoiceDate: invoices.invoiceDate, total: invoices.total, paid: invoices.paid, status: invoices.status }).from(invoices);
+  const from = input.from?.getTime() ?? -Infinity; const to = input.to?.getTime() ?? Infinity;
+  const filtered = rows.filter(row => row.invoiceDate.getTime() >= from && row.invoiceDate.getTime() <= to);
+  const revenue = filtered.filter(row => row.type === "sale").reduce((sum, row) => sum + Number(row.total), 0);
+  const expenses = filtered.filter(row => row.type === "purchase").reduce((sum, row) => sum + Number(row.total), 0);
+  const receivables = filtered.filter(row => row.type === "sale" && ["issued", "partially_paid", "overdue"].includes(row.status)).reduce((sum, row) => sum + Math.max(0, Number(row.total) - Number(row.paid)), 0);
+  const lowStock = await db.select({ value: sql<number>`count(*)` }).from(products).where(and(eq(products.isActive, true), lt(products.quantity, products.minQuantity)));
+  return { revenue, expenses, profit: revenue - expenses, receivables, invoiceCount: filtered.length, lowStockCount: Number(lowStock[0]?.value ?? 0), from: input.from ?? null, to: input.to ?? null };
 }
+
+export async function getDebtAging(input: { asOf?: Date; partyType?: "customer" | "supplier" } = {}) {
+  const db = await getDb(); if (!db) return [];
+  const asOf = input.asOf ?? new Date();
+  const partyRows = await db.select({ id: parties.id, name: parties.name, type: parties.type, openingBalance: parties.openingBalance }).from(parties).where(input.partyType ? eq(parties.type, input.partyType) : undefined);
+  const invoiceRows = await db.select({ partyId: invoices.partyId, invoiceDate: invoices.invoiceDate, total: invoices.total, paid: invoices.paid, type: invoices.type }).from(invoices).where(lte(invoices.invoiceDate, asOf));
+  return partyRows.map(party => { const balance = Number(party.openingBalance) + invoiceRows.filter(row => row.partyId === party.id && ((party.type === "customer" && row.type === "sale") || (party.type === "supplier" && row.type === "purchase"))).reduce((sum, row) => sum + Math.max(0, Number(row.total) - Number(row.paid)), 0); const buckets = { current: 0, days1to30: 0, days31to60: 0, days61to90: 0, over90: 0 }; invoiceRows.filter(row => row.partyId === party.id).forEach(row => { const due = Math.max(0, Number(row.total) - Number(row.paid)); const age = Math.floor((asOf.getTime() - row.invoiceDate.getTime()) / 86400000); if (age <= 0) buckets.current += due; else if (age <= 30) buckets.days1to30 += due; else if (age <= 60) buckets.days31to60 += due; else if (age <= 90) buckets.days61to90 += due; else buckets.over90 += due; }); return { ...party, balance, ...buckets }; }).filter(row => row.balance > 0);
+}
+
+export async function getCashFlowAnalysis(input: { from?: Date; to?: Date } = {}) { const reports = await getFinancialReports(input); const movements = ("movements" in reports.cashFlow ? reports.cashFlow.movements : []) as Array<{ accountName: string; net: number }>; return { ...reports.cashFlow, operating: movements.filter((row) => !/أصل|معدات|استثمار|قرض|تمويل/i.test(row.accountName)).reduce((sum, row) => sum + row.net, 0), investing: movements.filter((row) => /أصل|معدات|استثمار/i.test(row.accountName)).reduce((sum, row) => sum + row.net, 0), financing: movements.filter((row) => /قرض|تمويل|رأس مال/i.test(row.accountName)).reduce((sum, row) => sum + row.net, 0) }; }
+
+export type OracleReportGroup = "generalLedger" | "payables" | "receivables" | "fixedAssets" | "cashManagement";
+export type OracleReportDefinition = { id: string; group: OracleReportGroup; title: string; source: string; status: "live" | "catalog" };
+export const ORACLE_REPORT_CATALOG: OracleReportDefinition[] = [
+  { id: "trial-balance", group: "generalLedger", title: "ميزان المراجعة", source: "journalEntries/journalLines/accounts", status: "live" },
+  { id: "gl-activity", group: "generalLedger", title: "حركة الحسابات ودفتر الأستاذ العام", source: "journalEntries/journalLines/accounts", status: "live" },
+  { id: "audit-trail", group: "generalLedger", title: "تقرير التدقيق", source: "journalEntries/journalLines", status: "live" },
+  { id: "ap-aging", group: "payables", title: "أعمار الذمم الدائنة", source: "parties/invoices", status: "live" },
+  { id: "payment-register", group: "payables", title: "سجل المدفوعات", source: "partyPayments", status: "live" },
+  { id: "invoice-po-matching", group: "payables", title: "مطابقة الفواتير وأوامر الشراء", source: "invoices/invoiceLines", status: "catalog" },
+  { id: "ar-aging", group: "receivables", title: "أعمار الذمم المدينة", source: "parties/invoices", status: "live" },
+  { id: "collections", group: "receivables", title: "تقرير التحصيلات", source: "partyPayments/invoices", status: "live" },
+  { id: "customer-invoice-register", group: "receivables", title: "سجل فواتير العملاء", source: "invoices/invoiceLines", status: "live" },
+  { id: "depreciation", group: "fixedAssets", title: "تقرير إهلاك الأصول", source: "fixedAssets", status: "catalog" },
+  { id: "asset-additions-retirements", group: "fixedAssets", title: "إضافات واستبعادات الأصول", source: "fixedAssets", status: "catalog" },
+  { id: "bank-reconciliation", group: "cashManagement", title: "تقارير التسوية البنكية", source: "bankTransactions", status: "catalog" },
+  { id: "cash-movement", group: "cashManagement", title: "حركة النقدية والتدفقات النقدية", source: "journalEntries/journalLines", status: "live" },
+];
+
+export function getOracleReportCatalog(group?: OracleReportGroup) { return group ? ORACLE_REPORT_CATALOG.filter(report => report.group === group) : ORACLE_REPORT_CATALOG; }
 
 export async function listCurrencies() { const db = await getDb(); return db ? db.select().from(currencies).where(eq(currencies.isActive, true)).orderBy(desc(currencies.isBase), currencies.code) : []; }
 export async function updateCurrency(input: { code: string; exchangeRate: string }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.update(currencies).set({ exchangeRate: input.exchangeRate }).where(eq(currencies.code, input.code)); }
-export async function importMasterRows(input: { accounts?: Array<{ code: string; name: string; category: "asset" | "liability" | "equity" | "revenue" | "expense"; openingBalance?: number }>; parties?: Array<{ type: "customer" | "supplier"; name: string; phone?: string; email?: string; taxNumber?: string; openingBalance?: number; creditLimit?: number; currencyCode?: string }> }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); let accountsImported = 0; let partiesImported = 0; const errors: Array<{ row: number; field: string; message: string }> = []; await db.transaction(async tx => { for (const { index, row } of (input.accounts ?? []).map((row, index) => ({ row, index }))) { if (!row.code.trim() || !row.name.trim()) { errors.push({ row: index + 2, field: "code/name", message: "كود الحساب واسم الحساب مطلوبان" }); continue; } if (!Number.isFinite(Number(row.openingBalance ?? 0))) { errors.push({ row: index + 2, field: "openingBalance", message: "الرصيد الافتتاحي غير صالح" }); continue; } try { const duplicate = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, row.code.trim())).limit(1); if (duplicate.length) { errors.push({ row: index + 2, field: "code", message: `كود الحساب ${row.code} موجود مسبقاً` }); continue; } await tx.insert(accounts).values({ code: row.code.trim(), name: row.name.trim(), category: row.category, openingBalance: Number(row.openingBalance ?? 0).toFixed(2) }); accountsImported++; } catch { errors.push({ row: index + 2, field: "code", message: `تعذر استيراد الحساب ${row.code}` }); } } for (const { index, row } of (input.parties ?? []).map((row, index) => ({ row, index }))) { if (!row.name.trim()) { errors.push({ row: index + 2, field: "name", message: "اسم العميل أو المورد مطلوب" }); continue; } const duplicateParty = await tx.select({ id: parties.id }).from(parties).where(and(eq(parties.type, row.type), eq(parties.name, row.name.trim()))).limit(1); if (duplicateParty.length) { errors.push({ row: index + 2, field: "name", message: `السجل ${row.name} موجود مسبقاً لهذا النوع` }); continue; } await tx.insert(parties).values({ type: row.type, name: row.name.trim(), phone: row.phone, email: row.email, taxNumber: row.taxNumber, openingBalance: Number(row.openingBalance ?? 0).toFixed(2), creditLimit: Number(row.creditLimit ?? 0).toFixed(2), currencyCode: row.currencyCode ?? "SAR" }); partiesImported++; } }); return { accountsImported, partiesImported, errors }; }
+export async function importMasterRows(input: { accounts?: Array<{ code: string; name: string; category: "asset" | "liability" | "equity" | "revenue" | "expense"; openingBalance?: number }>; parties?: Array<{ type: "customer" | "supplier"; name: string; phone?: string; email?: string; taxNumber?: string; openingBalance?: number; creditLimit?: number; currencyCode?: string }> }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); let accountsImported = 0; let partiesImported = 0; const errors: Array<{ row: number; field: string; message: string }> = []; await db.transaction(async tx => { for (const { index, row } of (input.accounts ?? []).map((row, index) => ({ row, index }))) { if (!row.code.trim() || !row.name.trim()) { errors.push({ row: index + 2, field: "code/name", message: "كود الحساب واسم الحساب مطلوبان" }); continue; } if (!Number.isFinite(Number(row.openingBalance ?? 0))) { errors.push({ row: index + 2, field: "openingBalance", message: "الرصيد الافتتاحي غير صالح" }); continue; } try { const duplicate = await tx.select({ id: accounts.id }).from(accounts).where(eq(accounts.code, row.code.trim())).limit(1); if (duplicate.length) { errors.push({ row: index + 2, field: "code", message: `كود الحساب ${row.code} موجود مسبقاً` }); continue; } await tx.insert(accounts).values({ code: row.code.trim(), name: row.name.trim(), category: row.category, openingBalance: Number(row.openingBalance ?? 0).toFixed(2) }); accountsImported++; } catch { errors.push({ row: index + 2, field: "code", message: `تعذر استيراد الحساب ${row.code}` }); } } for (const { index, row } of (input.parties ?? []).map((row, index) => ({ row, index }))) { if (!row.name.trim()) { errors.push({ row: index + 2, field: "name", message: "اسم العميل أو المورد مطلوب" }); continue; } const duplicateParty = await tx.select({ id: parties.id }).from(parties).where(and(eq(parties.type, row.type), eq(parties.name, row.name.trim()))).limit(1); if (duplicateParty.length) { errors.push({ row: index + 2, field: "name", message: `السجل ${row.name} موجود مسبقاً لهذا النوع` }); continue; } await tx.insert(parties).values({ type: row.type, name: row.name.trim(), phone: row.phone, email: row.email, taxNumber: row.taxNumber, openingBalance: Number(row.openingBalance ?? 0).toFixed(2), creditLimit: Number(row.creditLimit ?? 0).toFixed(2), currencyCode: row.currencyCode ?? "EGP" }); partiesImported++; } }); return { accountsImported, partiesImported, errors }; }
 
 export async function listAccounts() { const db = await getDb(); return db ? db.select().from(accounts).orderBy(accounts.code) : []; }
 export async function listParties(type?: "customer" | "supplier") { const db = await getDb(); return db ? db.select().from(parties).where(type ? eq(parties.type, type) : undefined).orderBy(desc(parties.createdAt)) : []; }

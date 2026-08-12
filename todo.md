@@ -87,3 +87,35 @@
 - [x] Restart the development server after tax-summary changes and confirm no current TypeScript or startup transform errors
 - [x] Verify the Arabic reports screen visually shows sales tax, purchase tax, and net tax cards in the direct reports preview
 - [x] Restore the active navigation section declaration after adding the reports preview query parameter
+
+# Sky ERP expansion
+
+- [x] Rename product branding to Sky ERP across title, login, dashboard, and metadata
+- [x] Make dashboard cards and control-panel sections interactive with report navigation
+- [x] Add dashboard inclusive from/to date filters and apply them to live summaries and charts
+- [x] Build user management and department-based custom permission templates
+- [x] Change the default/base currency to Egyptian pound (EGP) with migration-safe currency handling
+- [x] Add debt-aging report with aging buckets, party filters, and export support
+- [x] Add expanded cash-flow analysis with operating, investing, and financing sections
+- [x] Create a modular reports center grouped by financial, sales, purchases, inventory, customers, suppliers, HR, POS, tax, and management reports
+- [x] Expand Egyptian accounting report catalog and report-specific filters/calculations based on documented research
+- [x] Add unified Excel and PDF export actions for every report module
+- [x] Research SAP, Odoo, Oracle, and Egyptian accounting/reporting references; save sources and map adopted report capabilities
+- [x] Add Vitest coverage and RTL/browser verification for the Sky ERP expansion; preview evidence is documented with OAuth limitation
+- [x] Save and deliver the Sky ERP checkpoint
+- [x] Complete Sky ERP branding across dashboard, login, and metadata surfaces
+- [x] Make main dashboard summary cards navigate to relevant reports
+- [x] Enforce department permission templates in protected procedures, not only as editable metadata
+- [x] Replace the remaining SAR import-template default with EGP
+- [x] Add customer/supplier aging filters and a management reports group
+- [x] Document Egyptian-specific report mappings and adopted calculations from the research notes
+- [x] Capture RTL/browser verification for the new Sky ERP dashboard, access, aging, cash-flow, and report-center features; authenticated interactions require user OAuth
+
+# Oracle Financials report expansion
+
+- [x] Add Oracle-aligned report groups for general ledger, accounts payable, accounts receivable, fixed assets, and cash management
+- [x] Add payment register, customer collections, invoice/PO matching, asset additions/retirements, and bank reconciliation report entries with explicit live/catalog data-availability states; the report center renders the status and blocks catalog-only drill-down
+- [x] Add the protected Oracle report-catalog query and reuse existing live aging, collections, invoice, journal, and cash-flow calculations without fabricating fixed-asset, purchase-order, or bank-transaction data
+- [x] Apply the shared report period, party, currency, amount, and text filters plus Excel/PDF exports to live Oracle-aligned report cards, while catalog-only reports show an honest unavailable state
+- [x] Add Vitest coverage for the detailed financial calculations and Oracle report-catalog mappings; 19 tests pass
+- [x] Save and deliver the Oracle-aligned Sky ERP checkpoint

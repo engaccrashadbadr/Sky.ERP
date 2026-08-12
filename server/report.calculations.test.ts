@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateDetailedReportSections } from "./db";
+import { calculateDetailedReportSections, getOracleReportCatalog } from "./db";
 
 describe("calculateDetailedReportSections", () => {
   const trialBalance = [
@@ -26,5 +26,16 @@ describe("calculateDetailedReportSections", () => {
     expect(result.cashFlow.outflow).toBe(200);
     expect(result.cashFlow.net).toBe(800);
     expect(result.taxSummary).toEqual({ totalTax: 525, salesTax: 375, purchaseTax: 150, netTax: 225, taxableSales: 2500, taxablePurchases: 1000, invoiceCount: 2, byType: [{ type: "sale", invoiceCount: 1, tax: 375, taxableAmount: 2500 }, { type: "purchase", invoiceCount: 1, tax: 150, taxableAmount: 1000 }] });
+  });
+});
+
+describe("Oracle Financials report catalog", () => {
+  it("exposes the requested report families with honest data availability", () => {
+    expect(getOracleReportCatalog("generalLedger").map(report => report.title)).toEqual(["ميزان المراجعة", "حركة الحسابات ودفتر الأستاذ العام", "تقرير التدقيق"]);
+    expect(getOracleReportCatalog("payables").map(report => report.title)).toContain("سجل المدفوعات");
+    expect(getOracleReportCatalog("receivables").map(report => report.title)).toContain("تقرير التحصيلات");
+    expect(getOracleReportCatalog("fixedAssets").every(report => report.status === "catalog")).toBe(true);
+    expect(getOracleReportCatalog("cashManagement").map(report => report.title)).toContain("تقارير التسوية البنكية");
+    expect(getOracleReportCatalog().some(report => report.status === "live" && report.source.includes("journalEntries"))).toBe(true);
   });
 });
