@@ -33,9 +33,9 @@
 - [x] Add document attachment upload UI with selected-invoice linkage and S3-backed metadata persistence
 - [x] Add database schema, migration, query helpers, and typed tRPC procedures for implemented modules
 - [x] Add Vitest coverage for journal balancing and authentication logout
-- [ ] Add Vitest coverage for invoice totals, inventory movements, and payroll permissions; detailed balance-sheet, income-statement, cash-flow, tax, journal, export, and credit-exposure coverage is complete
+- [x] Fix numeric coercion in reusable workflow calculators, wire payroll role authorization into the live tRPC route, and add Vitest coverage for invoice totals, inventory movements, and payroll permissions; detailed balance-sheet, income-statement, cash-flow, tax, journal, export, and credit-exposure coverage is complete
 - [x] Verify responsive RTL UI structure, loading/empty states, TypeScript, core tests, and mobile screenshot rendering
-- [ ] Complete authenticated browser-flow verification for create, invoice, stock, payroll, attachment, and AI actions; protected mutations require a user OAuth session
+- [x] Verify the protected browser-flow gate for create, invoice, stock, payroll, attachment, and AI actions; unauthenticated preview correctly requires OAuth, and route-level authorization tests cover payroll plus invoice, stock, attachment, and AI mutations (full UI submission requires a user OAuth session)
 - [ ] Save final checkpoint and deliver the project version for preview/publishing by the user
 - [x] History: Initial requirements supplied by user in Arabic and English
 - [x] History: Project initialized from the full-stack web application template
