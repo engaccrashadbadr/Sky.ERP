@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { ENV } from "./_core/env";
-import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs } from "../drizzle/schema";
+import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs, costCenters, costElements, productCosts, costAllocations } from "../drizzle/schema";
 import { storagePut } from "./storage";
 import { notifyOwner } from "./_core/notification";
 
@@ -153,6 +153,25 @@ export async function getPartyStatement(partyId: number) {
   let running = 0;
   return rows.map(row => { running += row.debit - row.credit; return { ...row, running }; });
 }
+export async function listCostCenters() { const db = await getDb(); return db ? db.select().from(costCenters).where(eq(costCenters.isActive, true)).orderBy(costCenters.code) : []; }
+export async function createCostCenter(input: typeof costCenters.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(costCenters).values(input); }
+export async function listCostElements() { const db = await getDb(); return db ? db.select().from(costElements).where(eq(costElements.isActive, true)).orderBy(costElements.code) : []; }
+export async function createCostElement(input: typeof costElements.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(costElements).values(input); }
+export async function listProductCosts(productId?: number) { const db = await getDb(); if (!db) return []; return db.select().from(productCosts).where(productId ? eq(productCosts.productId, productId) : undefined).orderBy(desc(productCosts.effectiveFrom)); }
+export async function createProductCost(input: typeof productCosts.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(productCosts).values(input); }
+export async function listCostAllocations(period?: string) { const db = await getDb(); if (!db) return []; return db.select().from(costAllocations).where(period ? eq(costAllocations.period, period) : undefined).orderBy(desc(costAllocations.createdAt)); }
+export async function createCostAllocation(input: typeof costAllocations.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(costAllocations).values(input); }
+export async function getCostingSummary(input: { from?: Date; to?: Date } = {}) {
+  const db = await getDb(); if (!db) return { standardCost: 0, actualCost: 0, variance: 0, allocationCount: 0, productCount: 0, byElement: [] };
+  const rows = await db.select().from(productCosts);
+  const from = input.from?.getTime() ?? -Infinity; const to = input.to?.getTime() ?? Infinity;
+  const filtered = rows.filter(row => row.effectiveFrom.getTime() >= from && row.effectiveFrom.getTime() <= to);
+  const standardCost = filtered.reduce((sum, row) => sum + Number(row.standardCost), 0);
+  const actualCost = filtered.reduce((sum, row) => sum + Number(row.actualCost), 0);
+  const byElement = Object.values(filtered.reduce<Record<string, { costElementId: number; standardCost: number; actualCost: number }>>((acc, row) => { const key = String(row.costElementId); acc[key] ??= { costElementId: row.costElementId, standardCost: 0, actualCost: 0 }; acc[key].standardCost += Number(row.standardCost); acc[key].actualCost += Number(row.actualCost); return acc; }, {}));
+  return { standardCost, actualCost, variance: actualCost - standardCost, allocationCount: (await db.select().from(costAllocations)).length, productCount: new Set(filtered.map(row => row.productId)).size, byElement };
+}
+
 export async function createProduct(input: typeof products.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(products).values(input); }
 export async function createEmployee(input: typeof employees.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(employees).values(input); }
 export function calculateCreditExposure(openingBalance: number, movements: Array<{ total?: string | number | null; paid?: string | number | null }>) { return Number(openingBalance || 0) + movements.reduce((sum, movement) => sum + Math.max(0, Number(movement.total || 0) - Number(movement.paid || 0)), 0); }

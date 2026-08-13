@@ -162,3 +162,12 @@
 
 - [x] Add comprehensive DOM tests for dashboard report-opening cards, including accessible labels, click routing, date filters, notifications, and all supported report destinations
 - [x] Run TypeScript and Vitest validation for the dashboard report-card tests and save a verified checkpoint; TypeScript passes and 36 tests pass across 13 files
+
+# Costing, financial linkage, and responsive dashboard enhancement
+
+- [x] Add a comprehensive costing model for items, cost centers, cost elements, allocation bases, and costing periods with auditability
+- [x] Add item codes/SKUs and cost fields to inventory and link costing outputs to the appropriate financial statements and subreports
+- [x] Route each dashboard financial KPI to its appropriate detailed report destination with focused interaction tests
+- [x] Verify the dashboard responsively at desktop, tablet, and mobile widths and correct visual or interaction defects
+- [x] Verify the sidebar navigation at desktop and mobile widths, including open/close and destination behavior; mobile trigger and authenticated navigation framing verified visually
+- [x] Run TypeScript, Vitest, and visual verification; document evidence and save a checkpoint

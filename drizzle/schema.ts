@@ -260,6 +260,47 @@ export const auditLogs = mysqlTable("auditLogs", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const costCenters = mysqlTable("costCenters", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 40 }).notNull().unique(),
+  name: varchar("name", { length: 160 }).notNull(),
+  parentId: int("parentId"),
+  managerUserId: int("managerUserId"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export const costElements = mysqlTable("costElements", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 40 }).notNull().unique(),
+  name: varchar("name", { length: 160 }).notNull(),
+  category: mysqlEnum("category", ["material", "labor", "overhead", "other"]).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export const productCosts = mysqlTable("productCosts", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  costCenterId: int("costCenterId"),
+  costElementId: int("costElementId").notNull(),
+  standardCost: decimal("standardCost", { precision: 18, scale: 2 }).default("0").notNull(),
+  actualCost: decimal("actualCost", { precision: 18, scale: 2 }).default("0").notNull(),
+  currencyCode: varchar("currencyCode", { length: 3 }).default("EGP").notNull(),
+  effectiveFrom: timestamp("effectiveFrom").notNull(),
+  effectiveTo: timestamp("effectiveTo"),
+  note: text("note"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export const costAllocations = mysqlTable("costAllocations", {
+  id: int("id").autoincrement().primaryKey(),
+  costCenterId: int("costCenterId").notNull(),
+  targetAccountId: int("targetAccountId").notNull(),
+  basis: mysqlEnum("basis", ["revenue", "quantity", "headcount", "manual"]).notNull(),
+  allocationRate: decimal("allocationRate", { precision: 9, scale: 4 }).default("0").notNull(),
+  period: varchar("period", { length: 7 }).notNull(),
+  description: varchar("description", { length: 240 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Account = typeof accounts.$inferSelect;

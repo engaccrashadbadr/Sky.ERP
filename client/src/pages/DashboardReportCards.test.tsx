@@ -45,10 +45,10 @@ describe("Dashboard report-opening cards", () => {
     fireEvent.click(screen.getByRole("button", { name: /تقرير مالي/ }));
 
     expect(onNavigate).toHaveBeenCalledTimes(7);
-    expect(onNavigate).toHaveBeenNthCalledWith(1, "reports");
-    expect(onNavigate).toHaveBeenNthCalledWith(2, "reports");
-    expect(onNavigate).toHaveBeenNthCalledWith(3, "reports");
-    expect(onNavigate).toHaveBeenNthCalledWith(4, "reports");
+    expect(onNavigate).toHaveBeenNthCalledWith(1, "reports:revenue");
+    expect(onNavigate).toHaveBeenNthCalledWith(2, "reports:expenses");
+    expect(onNavigate).toHaveBeenNthCalledWith(3, "reports:profit");
+    expect(onNavigate).toHaveBeenNthCalledWith(4, "reports:receivables");
     expect(onNavigate).toHaveBeenNthCalledWith(5, "reports");
     expect(onNavigate).toHaveBeenNthCalledWith(6, "reports");
     expect(onNavigate).toHaveBeenNthCalledWith(7, "reports");
