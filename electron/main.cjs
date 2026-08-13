@@ -1,5 +1,6 @@
 const { app, BrowserWindow, dialog } = require("electron");
 const path = require("node:path");
+const { pathToFileURL } = require("node:url");
 
 const PORT = Number(process.env.PORT || 3000);
 process.env.NODE_ENV = "production";
@@ -10,7 +11,7 @@ let serverStarted = false;
 
 async function startServer() {
   const serverEntry = path.join(__dirname, "..", "dist", "index.js");
-  await import(serverEntry);
+  await import(pathToFileURL(serverEntry).href);
   serverStarted = true;
 }
 

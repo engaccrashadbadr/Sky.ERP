@@ -313,3 +313,11 @@
 - [x] Add loading, caching, and error-boundary improvements without hiding accounting errors
 - [x] Benchmark key workflows and run the complete regression suite
 - [x] Save and deliver the verified performance checkpoint
+
+# Windows EXE launch repair
+
+- [x] Reproduce and trace the Electron C: protocol/path-resolution failure
+- [x] Make All-in-One, Server, and Client launch paths Windows-safe
+- [x] Add regression coverage for file URLs, local server URLs, and packaged paths
+- [x] Build and verify the corrected Windows packaging configuration
+- [x] Save and deliver the corrected Windows release checkpoint
