@@ -13,7 +13,21 @@ export function exportToExcel(title: string, rows: ExportRow[]) {
   worksheet["!dir"] = "rtl";
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "التقرير");
-  XLSX.writeFile(workbook, `${safeFileName(title)}.xlsx`);
+  const fileName = `${safeFileName(title)}.xlsx`;
+  try {
+    XLSX.writeFile(workbook, fileName);
+  } catch {
+    // Fallback for restricted browser environments: serialize the workbook to an
+    // ArrayBuffer and trigger a normal anchor download instead of failing silently.
+    const bytes = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+    const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
 }
 
 export function exportToPdf(title: string, rows: ExportRow[]) {

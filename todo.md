@@ -243,3 +243,15 @@
 
 - [x] Add optional shared LAN Client EXE and Server EXE packaging while preserving the existing all-in-one EXE mode
 - [x] Add live shared-data update signaling and document central-server/client configuration
+
+- [x] Make the dashboard content scroll dynamically with the page while preserving correct mobile sidebar behavior and preventing background-only scrolling
+- [x] Activate report-center cards for trial balance, income statement, balance sheet, receivables, payables, and remaining report groups
+- [x] Add shared date-range controls and report-specific selectors, including customer/vendor/account trial-balance variants
+- [x] Repair Excel export across all report screens with populated-data and explicit empty-data handling
+- [x] Add DOM and route/export tests plus responsive verification for the repaired flows
+
+- [x] Review xero.html for reusable information architecture, interaction, navigation, and visual organization patterns
+- [x] Apply prioritized Xero-inspired usability and workflow improvements without removing Sky ERP functionality
+- [x] Resolve regressions and newly discovered issues from the improvement pass, with tests and responsive verification
+
+- [x] Fix the malformed report period state declaration discovered during validation and rerun the full test/build checks
