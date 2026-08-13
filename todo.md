@@ -174,14 +174,14 @@
 
 # Costing and manufacturing blueprint expansion
 
-- [ ] Restructure the costing module into cost elements, costing methods, cost types, financial integration, valuation, and variance analysis sections
-- [ ] Add product code classification rules: prefix 1 raw material, prefix 2 semi-finished, prefix 3 finished product, with validation and Egyptian accounting guidance
-- [ ] Add a dedicated cost-center coding page and detailed product distribution by cost center
-- [ ] Add detailed item cost and profitability reports by SKU, cost center, period, and costing method
-- [ ] Add BOMs, manufacturing operations/stages, work orders, WIP accumulation, and manufacturing cost capture in the costing module
-- [ ] Link inventory, purchases, WIP, finished goods, COGS, variance, and general-ledger accounts with auditable integration records
-- [ ] Verify end-to-end database/API/UI/report integration using real persisted data paths and focused tests
-- [ ] Verify responsive costing screens, navigation/sidebar behavior, and report interaction; document evidence and save a checkpoint
+- [x] Restructure the costing module into cost elements, costing methods, cost types, financial integration, valuation, and variance analysis sections
+- [x] Add product code classification rules: prefix 1 raw material, prefix 2 semi-finished, prefix 3 finished product, with validation and Egyptian accounting guidance
+- [x] Add a dedicated cost-center coding page and detailed product distribution by cost center
+- [x] Add detailed item cost and profitability reports by SKU, cost center, period, and costing method
+- [x] Add BOMs, manufacturing operations/stages, work orders, WIP accumulation, and manufacturing cost capture in the costing module
+- [x] Link inventory, purchases, WIP, finished goods, COGS, variance, and general-ledger accounts with auditable integration records
+- [x] Verify end-to-end database/API/UI/report integration using real persisted data paths and focused tests
+- [x] Verify responsive costing screens, navigation/sidebar behavior, and report interaction; document evidence and save a checkpoint
 
 
 # Blueprint-driven costing and manufacturing completion
