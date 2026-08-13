@@ -233,3 +233,5 @@
 - [x] Upload the verified Sky ERP project to the user's GitHub repository and verify the pushed branch without exposing secrets
 
 - [x] Upload all remaining local project files and commits to GitHub and verify complete synchronization
+
+- [x] Configure a GitHub Pages-compatible static frontend build, repository-base routing, deployment workflow, and backend limitation documentation

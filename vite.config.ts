@@ -153,6 +153,9 @@ function vitePluginManusDebugCollector(): Plugin {
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
 
 export default defineConfig({
+  // GitHub Pages serves this repository beneath /Sky.ERP/; local and managed
+  // development keep the root path by default.
+  base: process.env.VITE_BASE_PATH ?? "/",
   plugins,
   resolve: {
     alias: {
