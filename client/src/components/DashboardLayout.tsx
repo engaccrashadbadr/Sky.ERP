@@ -61,11 +61,14 @@ export default function DashboardLayout({
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
           <div className="flex flex-col items-center gap-6">
-            <h1 className="text-2xl font-semibold tracking-tight text-center">
-              Sign in to continue
-            </h1>
-            <p className="text-sm text-muted-foreground text-center max-w-sm">
-              Access to this dashboard requires authentication. Continue to launch the login flow.
+            <div className="text-center space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Sky ERP</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-center" dir="rtl">
+                تسجيل الدخول إلى Sky ERP
+              </h1>
+            </div>
+            <p className="text-sm text-muted-foreground text-center max-w-sm" dir="rtl">
+              استخدم تسجيل الدخول الآمن لإنشاء حسابك أو الدخول بحسابك الحالي. لا يستخدم النظام كلمات مرور افتراضية أو بيانات اعتماد ثابتة.
             </p>
           </div>
           <Button
@@ -73,7 +76,7 @@ export default function DashboardLayout({
             size="lg"
             className="w-full shadow-lg hover:shadow-xl transition-all"
           >
-            Sign in
+            تسجيل الدخول أو إنشاء حساب
           </Button>
         </div>
       </div>

@@ -193,6 +193,73 @@ export const attachments = mysqlTable("attachments", {
   uploadedAt: timestamp("uploadedAt").defaultNow().notNull(),
 });
 
+export const organizationUnits = mysqlTable("organizationUnits", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 160 }).notNull(),
+  code: varchar("code", { length: 40 }).notNull().unique(),
+  parentId: int("parentId"),
+  managerUserId: int("managerUserId"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const approvalTemplates = mysqlTable("approvalTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  requestType: varchar("requestType", { length: 60 }).notNull(),
+  name: varchar("name", { length: 180 }).notNull(),
+  organizationUnitId: int("organizationUnitId"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const approvalTemplateSteps = mysqlTable("approvalTemplateSteps", {
+  id: int("id").autoincrement().primaryKey(),
+  templateId: int("templateId").notNull(),
+  stepOrder: int("stepOrder").notNull(),
+  approverRole: varchar("approverRole", { length: 80 }),
+  approverUserId: int("approverUserId"),
+  approverDepartment: varchar("approverDepartment", { length: 120 }),
+  minimumAmount: decimal("minimumAmount", { precision: 18, scale: 2 }).default("0").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const workflowRequests = mysqlTable("workflowRequests", {
+  id: int("id").autoincrement().primaryKey(),
+  requestType: varchar("requestType", { length: 60 }).notNull(),
+  referenceNumber: varchar("referenceNumber", { length: 60 }).notNull().unique(),
+  requesterUserId: int("requesterUserId").notNull(),
+  organizationUnitId: int("organizationUnitId"),
+  amount: decimal("amount", { precision: 18, scale: 2 }).default("0").notNull(),
+  payloadJson: text("payloadJson").notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "cancelled"]).default("pending").notNull(),
+  currentStep: int("currentStep").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export const workflowApprovals = mysqlTable("workflowApprovals", {
+  id: int("id").autoincrement().primaryKey(),
+  requestId: int("requestId").notNull(),
+  stepOrder: int("stepOrder").notNull(),
+  approverUserId: int("approverUserId"),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  comment: text("comment"),
+  actionedAt: timestamp("actionedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const auditLogs = mysqlTable("auditLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  actorUserId: int("actorUserId"),
+  action: varchar("action", { length: 80 }).notNull(),
+  entityType: varchar("entityType", { length: 80 }).notNull(),
+  entityId: int("entityId"),
+  beforeJson: text("beforeJson"),
+  afterJson: text("afterJson"),
+  ipAddress: varchar("ipAddress", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Account = typeof accounts.$inferSelect;

@@ -131,3 +131,29 @@
 - [x] Verify the RTL dashboard and module/report-center layout visually; latest preview shows Sky ERP RTL dashboard with period controls, and authenticated interactions remain OAuth-gated
 - [x] Repair missing users.department and users.permissionTemplate columns in the live database before module work continues
 - [x] Save and deliver the expanded Sky ERP module-workspace checkpoint after runtime schema verification
+
+# Reliability, audit, approvals, and authentication expansion
+
+- [x] Make empty Excel exports download a valid empty workbook and empty PDF exports state لا توجد بيانات
+- [x] Add regression tests for empty and populated Excel/PDF exports
+- [x] Add persistent audit-log schema, helpers, protected procedures, and UI for accounting and user changes
+- [x] Record audit events for journal entries, invoices, stock, payroll, permissions, and approval actions
+- [x] Add organization structure and configurable multi-level approval templates
+- [x] Add purchase-request and leave-request approval workflows with ordered approvers and status history
+- [x] Extend approval foundation for other request types without fabricating business records
+- [x] Review authentication UX and document the OAuth limitation; Arabic OAuth login/registration guidance is shown and insecure hardcoded Admin/123 credentials are not created
+- [x] Run full TypeScript, Vitest, and RTL/browser verification; TypeScript passes, 27 tests pass, and the Sky ERP RTL preview loads successfully
+- [x] Add protected create/update UI and mutations for organization units and approval templates so approval paths are configurable
+- [x] Surface Arabic OAuth sign-in/sign-up guidance on the actual Home unauthenticated entry screen and re-verify visually; the current system remains OAuth-based and does not create hardcoded Admin/123 credentials
+- [x] Add edit/update controls in Settings for existing organization units and approval templates, then verify protected update mutations end to end
+- [x] Update the actual unauthenticated Home screen with Arabic OAuth account-creation guidance alongside sign-in and capture fresh visual evidence
+- [ ] Add focused Vitest coverage invoking admin.updateOrganizationUnit and admin.updateApprovalTemplate through the protected router, including authorization enforcement
+- [x] Document the authenticated UI limitation for editing organization units and approval templates; OAuth session is required for end-to-end browser submission
+
+# Interactive workflow and control audit
+
+- [x] Audit dashboard, report, administration, module, and workflow controls; document concrete coverage by section before marking complete
+- [x] Make request workflow step cards actionable; prove that clicking مسودة opens the editable draft form with focused workflow-contract coverage; rendered DOM coverage remains limited by the Node-only Vitest setup
+- [x] Wire and verify available review and approval steps to the live pending-request queue; keep archive explicitly unavailable until a closeout source/action exists
+- [ ] Add focused rendered UI/component coverage for draft, review, approval, archive, and report-step routing after adding a DOM test harness; retain protected-router authorization coverage
+- [x] Perform authenticated browser verification of the workflow step bar and key dashboard/report controls, or document the exact OAuth limitation per control; OAuth limitation documented in control-audit.md

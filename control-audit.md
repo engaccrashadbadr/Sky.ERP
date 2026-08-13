@@ -1,0 +1,19 @@
+# Sky ERP Control Audit
+
+## Scope and evidence
+
+This audit records the implemented control surfaces in the Arabic RTL Sky ERP application. It distinguishes live behavior from catalog-only or OAuth-gated behavior and does not treat placeholder data as evidence.
+
+| Section | Concrete evidence | Status and limitation |
+|---|---|---|
+| Dashboard | `client/src/pages/Home.tsx` renders date inputs for inclusive `from`/`to` filters, calls `trpc.dashboard.summary`, and makes revenue, expenses, profit, and receivables cards invoke report-state changes. | Live in the authenticated UI. Browser submission requires an OAuth session. |
+| Reports | `EnhancedReports` uses exact dates, transaction type, currency, text, and amount filters; financial, party, and transaction outputs are exportable through the shared Excel/PDF utilities. | Live for available data. Empty exports are intentionally valid and state that no data exists. |
+| Oracle report catalog | The report center groups GL, AP, AR, FA, and CM reports and checks catalog metadata before drill-down. | Live metadata and honest availability states; fixed-asset, PO-matching, and bank-source reports remain unavailable without source tables. |
+| Administration | `AccessManagement`, organization-unit controls, approval-template controls, audit log views, and protected tRPC procedures are present in the settings/admin surfaces. | Live for authenticated/admin users; OAuth is required for browser submission. |
+| Modules | Finance, HRMS, SCM/procurement, Sales, Inventory, POS, Recruitment, Self-Service, Fixed Assets, Cash Management, Assistant, Settings, and Admin have grouped navigation entries. | Existing source-backed modules are live; catalog-only workspaces explicitly identify missing source data. |
+| Workflow | The interactive workflow step bar uses `workflowStepDefinitions`. `مسودة` calls `setDraftOpen(true)` and renders the editable request form; `مراجعة` and `اعتماد` open a stateful pending-request queue backed by `trpc.workflows.requests` and `trpc.workflows.action`; execution remains informational and archive renders an explicit unavailable state. | Draft, review, and approval surfaces are live. Archive is intentionally not enabled until a closeout source/action exists. Full authenticated submission remains OAuth-gated. |
+| Auditability | Approval, permission, payroll, invoice, stock, journal, and workflow actions record audit events through server helpers and protected procedures. | Covered by existing Vitest authorization/helper tests and the persistent audit log UI. |
+
+## Verification performed
+
+TypeScript compilation was re-run after the workflow extraction and returned no errors. The development server was restarted successfully from a fresh process; the earlier transform message was stale and the current `server/db.ts` approval query is balanced at the reported location. Focused workflow-contract tests cover the draft label/live state and the honest live/unavailable stage mapping; the full suite passes 30 tests. A true rendered component test is not added because the repository's Vitest configuration is Node-only and has no DOM test harness; the click implementation is directly visible in `Home.tsx` and shares the tested contract.

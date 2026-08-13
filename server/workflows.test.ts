@@ -53,4 +53,15 @@ describe("ERP workflow calculators", () => {
     await expect(caller.attachments.upload({} as any)).rejects.toMatchObject(blocked);
     await expect(caller.assistant.ask({} as any)).rejects.toMatchObject(blocked);
   });
+
+  it("protects organization and approval-template update routes for administrators", async () => {
+    const guest = { req: {} as any, res: {} as any, user: null };
+    const user = { req: {} as any, res: {} as any, user: { id: 7, role: "user" } as any };
+    const unitInput = { id: 1, name: "المبيعات", code: "SALES" };
+    const templateInput = { id: 1, name: "اعتماد المشتريات", steps: [{ stepOrder: 1, approverRole: "accountant" }] };
+    await expect(appRouter.createCaller(guest).admin.updateOrganizationUnit(unitInput)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(appRouter.createCaller(user).admin.updateOrganizationUnit(unitInput)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(appRouter.createCaller(guest).admin.updateApprovalTemplate(templateInput)).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(appRouter.createCaller(user).admin.updateApprovalTemplate(templateInput)).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
 });

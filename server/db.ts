@@ -1,8 +1,7 @@
-import { and, desc, eq, lt, or, sql } from "drizzle-orm";
+import { and, desc, eq, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { lte } from "drizzle-orm";
 import { ENV } from "./_core/env";
-import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments } from "../drizzle/schema";
+import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs } from "../drizzle/schema";
 import { storagePut } from "./storage";
 import { notifyOwner } from "./_core/notification";
 
@@ -246,4 +245,171 @@ export async function getFinancialReports(input: { from?: Date; to?: Date }) {
   const filteredInvoices = invoiceRows.filter(invoice => invoice.invoiceDate.getTime() >= from && invoice.invoiceDate.getTime() <= to);
   const details = calculateDetailedReportSections(trialBalance, generalLedger, filteredInvoices);
   return { trialBalance, generalLedger, ...details };
+}
+
+
+export type AuditEventInput = {
+  actorUserId?: number | null;
+  action: string;
+  entityType: string;
+  entityId?: number | null;
+  before?: unknown;
+  after?: unknown;
+  ipAddress?: string | null;
+};
+
+export function serializeAuditValue(value: unknown) {
+  if (value === undefined || value === null) return null;
+  return JSON.stringify(value, (_key, nested) => typeof nested === "bigint" ? Number(nested) : nested);
+}
+
+export async function recordAuditEvent(input: AuditEventInput) {
+  const db = await getDb();
+  if (!db) return { id: 0, ...input };
+  const result = await db.insert(auditLogs).values({
+    actorUserId: input.actorUserId ?? null,
+    action: input.action,
+    entityType: input.entityType,
+    entityId: input.entityId ?? null,
+    beforeJson: serializeAuditValue(input.before),
+    afterJson: serializeAuditValue(input.after),
+    ipAddress: input.ipAddress ?? null,
+  });
+  return { id: Number(result[0].insertId), ...input };
+}
+
+export async function listAuditLogEntries(input: { entityType?: string; actorUserId?: number; limit?: number } = {}) {
+  const db = await getDb();
+  if (!db) return [];
+  const filters = [];
+  if (input.entityType) filters.push(eq(auditLogs.entityType, input.entityType));
+  if (input.actorUserId) filters.push(eq(auditLogs.actorUserId, input.actorUserId));
+  return db.select().from(auditLogs).where(filters.length ? and(...filters) : undefined).orderBy(desc(auditLogs.createdAt)).limit(Math.min(input.limit ?? 200, 500));
+}
+
+export async function listOrganizationUnits() {
+  const db = await getDb();
+  return db ? db.select().from(organizationUnits).where(eq(organizationUnits.isActive, true)).orderBy(organizationUnits.name) : [];
+}
+
+export async function listApprovalTemplates(requestType?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const templates = await db.select().from(approvalTemplates).where(requestType ? and(eq(approvalTemplates.requestType, requestType), eq(approvalTemplates.isActive, true)) : eq(approvalTemplates.isActive, true)).orderBy(approvalTemplates.name);
+  const steps = await db.select().from(approvalTemplateSteps).orderBy(approvalTemplateSteps.stepOrder);
+  return templates.map(template => ({ ...template, steps: steps.filter(step => step.templateId === template.id) }));
+}
+
+export type WorkflowRequestInput = {
+  requestType: "purchase" | "leave" | "expense" | "other";
+  referenceNumber: string;
+  requesterUserId: number;
+  organizationUnitId?: number;
+  amount?: number;
+  payload: Record<string, unknown>;
+  templateId?: number;
+};
+
+export async function createWorkflowRequest(input: WorkflowRequestInput) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  const amount = input.amount ?? 0;
+  const templates = await db.select().from(approvalTemplates).where(input.templateId ? eq(approvalTemplates.id, input.templateId) : and(eq(approvalTemplates.requestType, input.requestType), eq(approvalTemplates.isActive, true))).orderBy(approvalTemplates.id).limit(1);
+  const template = templates[0];
+  const requestResult = await db.insert(workflowRequests).values({
+    requestType: input.requestType,
+    referenceNumber: input.referenceNumber,
+    requesterUserId: input.requesterUserId,
+    organizationUnitId: input.organizationUnitId ?? template?.organizationUnitId ?? null,
+    amount: amount.toFixed(2),
+    payloadJson: JSON.stringify(input.payload),
+    status: "pending",
+    currentStep: 1,
+  });
+  const requestId = Number(requestResult[0].insertId);
+  const steps = template ? await db.select().from(approvalTemplateSteps).where(eq(approvalTemplateSteps.templateId, template.id)).orderBy(approvalTemplateSteps.stepOrder) : [];
+  const applicable = steps.filter(step => amount >= Number(step.minimumAmount));
+  if (applicable.length) await db.insert(workflowApprovals).values(applicable.map(step => ({ requestId, stepOrder: step.stepOrder, approverUserId: step.approverUserId ?? null, status: "pending" as const })));
+  await recordAuditEvent({ actorUserId: input.requesterUserId, action: "create", entityType: "workflowRequest", entityId: requestId, after: { requestType: input.requestType, referenceNumber: input.referenceNumber, amount } });
+  return { id: requestId, status: "pending", currentStep: 1, approvals: applicable };
+}
+
+export type ApprovalActor = { id: number; role: "user" | "accountant" | "admin"; department?: string | null; name?: string | null };
+export function canApproveStep(actor: ApprovalActor, step: { approverUserId?: number | null; approverRole?: string | null; approverDepartment?: string | null }) {
+  if (actor.role === "admin") return true;
+  if (step.approverUserId && step.approverUserId === actor.id) return true;
+  if (step.approverRole && step.approverRole === actor.role) return true;
+  if (step.approverDepartment && step.approverDepartment === actor.department) return true;
+  return false;
+}
+
+export async function actionWorkflowRequest(input: { requestId: number; actor: ApprovalActor; decision: "approve" | "reject"; comment?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  const requests = await db.select().from(workflowRequests).where(eq(workflowRequests.id, input.requestId)).limit(1);
+  const request = requests[0];
+  if (!request || request.status !== "pending") throw new Error("الطلب غير متاح للموافقة");
+  const currentRows = await db.select().from(workflowApprovals).where(and(eq(workflowApprovals.requestId, request.id), eq(workflowApprovals.stepOrder, request.currentStep), eq(workflowApprovals.status, "pending"))).limit(1);
+  const current = currentRows[0];
+  if (!current) throw new Error("لا توجد خطوة موافقة معلقة");
+  const templates = await db.select().from(approvalTemplates).where(and(eq(approvalTemplates.requestType, request.requestType), eq(approvalTemplates.isActive, true))).limit(1);
+  const stepRows = templates[0] ? await db.select().from(approvalTemplateSteps).where(and(eq(approvalTemplateSteps.templateId, templates[0].id), eq(approvalTemplateSteps.stepOrder, current.stepOrder))).limit(1) : [];
+  const step = stepRows[0];
+  if (!canApproveStep(input.actor, { ...current, ...(step ?? {}) })) throw new Error("لا تملك صلاحية اعتماد هذا الطلب");
+  const now = new Date();
+  await db.update(workflowApprovals).set({ status: input.decision === "approve" ? "approved" : "rejected", comment: input.comment, approverUserId: input.actor.id, actionedAt: now }).where(eq(workflowApprovals.id, current.id));
+  let next: typeof current | undefined;
+  if (input.decision === "approve") {
+    const pendingRows = await db.select().from(workflowApprovals).where(and(eq(workflowApprovals.requestId, request.id), eq(workflowApprovals.status, "pending"))).orderBy(workflowApprovals.stepOrder).limit(1);
+    next = pendingRows[0];
+  }
+  const status = input.decision === "reject" ? "rejected" : next ? "pending" : "approved";
+  await db.update(workflowRequests).set({ status, currentStep: next?.stepOrder ?? request.currentStep, updatedAt: now }).where(eq(workflowRequests.id, request.id));
+  await recordAuditEvent({ actorUserId: input.actor.id, action: input.decision, entityType: "workflowRequest", entityId: request.id, before: { status: request.status, currentStep: request.currentStep }, after: { status, currentStep: next?.stepOrder ?? request.currentStep, comment: input.comment } });
+  return { requestId: request.id, status, currentStep: next?.stepOrder ?? request.currentStep };
+}
+
+
+export async function listWorkflowRequests(input: { requestType?: string; status?: "pending" | "approved" | "rejected" | "cancelled" } = {}) {
+  const db = await getDb();
+  if (!db) return [];
+  const filters = [];
+  if (input.requestType) filters.push(eq(workflowRequests.requestType, input.requestType));
+  if (input.status) filters.push(eq(workflowRequests.status, input.status));
+  return db.select().from(workflowRequests).where(filters.length ? and(...filters) : undefined).orderBy(desc(workflowRequests.createdAt)).limit(200);
+}
+
+
+export async function createOrganizationUnit(input: { name: string; code: string; parentId?: number | null }) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  const result = await db.insert(organizationUnits).values({ name: input.name.trim(), code: input.code.trim(), parentId: input.parentId ?? null, isActive: true });
+  return { id: Number(result[0].insertId), ...input };
+}
+
+export async function updateOrganizationUnit(input: { id: number; name: string; code?: string; parentId?: number | null; isActive?: boolean }) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  await db.update(organizationUnits).set({ name: input.name.trim(), ...(input.code ? { code: input.code.trim() } : {}), parentId: input.parentId ?? null, isActive: input.isActive ?? true }).where(eq(organizationUnits.id, input.id));
+  return { success: true };
+}
+
+export async function createApprovalTemplate(input: { requestType: "purchase" | "leave" | "expense" | "other"; name: string; organizationUnitId?: number | null; steps: Array<{ stepOrder: number; approverRole?: string; approverUserId?: number; approverDepartment?: string; minimumAmount?: number }> }) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  const templateResult = await db.insert(approvalTemplates).values({ requestType: input.requestType, name: input.name.trim(), organizationUnitId: input.organizationUnitId ?? null, isActive: true });
+  const templateId = Number(templateResult[0].insertId);
+  const steps = input.steps.filter(step => step.stepOrder > 0).map(step => ({ templateId, stepOrder: step.stepOrder, approverRole: step.approverRole || null, approverUserId: step.approverUserId ?? null, approverDepartment: step.approverDepartment || null, minimumAmount: Number(step.minimumAmount ?? 0).toFixed(2) }));
+  if (steps.length) await db.insert(approvalTemplateSteps).values(steps);
+  return { id: templateId, steps };
+}
+
+export async function updateApprovalTemplate(input: { id: number; name: string; organizationUnitId?: number | null; isActive?: boolean; steps: Array<{ stepOrder: number; approverRole?: string; approverUserId?: number; approverDepartment?: string; minimumAmount?: number }> }) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  await db.update(approvalTemplates).set({ name: input.name.trim(), organizationUnitId: input.organizationUnitId ?? null, isActive: input.isActive ?? true }).where(eq(approvalTemplates.id, input.id));
+  await db.delete(approvalTemplateSteps).where(eq(approvalTemplateSteps.templateId, input.id));
+  const steps = input.steps.filter(step => step.stepOrder > 0).map(step => ({ templateId: input.id, stepOrder: step.stepOrder, approverRole: step.approverRole || null, approverUserId: step.approverUserId ?? null, approverDepartment: step.approverDepartment || null, minimumAmount: Number(step.minimumAmount ?? 0).toFixed(2) }));
+  if (steps.length) await db.insert(approvalTemplateSteps).values(steps);
+  return { success: true };
 }
