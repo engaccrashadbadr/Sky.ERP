@@ -277,3 +277,11 @@
 - [x] Implement sales/purchasing draft, review, approval, posting, payment, and settlement-direction workflow actions
 - [x] Add regression and DOM tests for the repaired flows and verify the full suite
 - [x] Save and deliver the verified repair checkpoint
+
+# Screen-specific Excel import templates
+
+- [x] Inventory all supported bulk-entry screens and their required fields
+- [x] Define reusable Arabic Excel template metadata, instructions, validation, and example-row rules
+- [x] Add contextual template-download controls to each supported input screen
+- [x] Verify workbook downloads, headers, empty-row behavior, and compatibility with additive import
+- [x] Save and deliver the verified template release
