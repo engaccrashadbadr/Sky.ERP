@@ -379,6 +379,19 @@ export const costDistributions = mysqlTable("costDistributions", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
+export const monthlyClosings = mysqlTable("monthlyClosings", {
+  id: int("id").autoincrement().primaryKey(),
+  period: varchar("period", { length: 7 }).notNull().unique(),
+  status: mysqlEnum("status", ["open", "closing", "closed", "reopened"]).default("open").notNull(),
+  closedBy: int("closedBy"),
+  closedAt: timestamp("closedAt"),
+  reopenedBy: int("reopenedBy"),
+  reopenedAt: timestamp("reopenedAt"),
+  trialBalanceDifference: decimal("trialBalanceDifference", { precision: 18, scale: 2 }).default("0").notNull(),
+  validationNote: text("validationNote"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Account = typeof accounts.$inferSelect;

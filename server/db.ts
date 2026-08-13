@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { ENV } from "./_core/env";
-import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs, costCenters, costElements, productCosts, costAllocations, costTypes, costingMethods, boms, bomLines, workOrders, workOrderOperations, costDistributions } from "../drizzle/schema";
+import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs, costCenters, costElements, productCosts, costAllocations, costTypes, costingMethods, boms, bomLines, workOrders, workOrderOperations, costDistributions, monthlyClosings } from "../drizzle/schema";
 import { storagePut } from "./storage";
 import { notifyOwner } from "./_core/notification";
 
@@ -442,6 +442,37 @@ export async function updateOrganizationUnit(input: { id: number; name: string; 
   return { success: true };
 }
 
+export async function listMonthlyClosings() {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  return db.select().from(monthlyClosings).orderBy(desc(monthlyClosings.period));
+}
+export async function upsertMonthlyClosing(period: string) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  const existing = await db.select().from(monthlyClosings).where(eq(monthlyClosings.period, period)).limit(1);
+  if (existing[0]) return existing[0];
+  await db.insert(monthlyClosings).values({ period, status: "open", trialBalanceDifference: "0" });
+  const created = await db.select().from(monthlyClosings).where(eq(monthlyClosings.period, period)).limit(1);
+  return created[0];
+}
+export async function closeMonthlyPeriod(input: { period: string; userId: number; trialBalanceDifference: number; validationNote?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  if (Math.abs(input.trialBalanceDifference) > 0.01) throw new Error("لا يمكن إقفال الفترة قبل توازن ميزان المراجعة");
+  await upsertMonthlyClosing(input.period);
+  await db.update(monthlyClosings).set({ status: "closed", closedBy: input.userId, closedAt: new Date(), trialBalanceDifference: input.trialBalanceDifference.toFixed(2), validationNote: input.validationNote ?? "تم اجتياز فحص التوازن" }).where(eq(monthlyClosings.period, input.period));
+  const rows = await db.select().from(monthlyClosings).where(eq(monthlyClosings.period, input.period)).limit(1);
+  return rows[0];
+}
+export async function reopenMonthlyPeriod(input: { period: string; userId: number; note?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("قاعدة البيانات غير متاحة");
+  await upsertMonthlyClosing(input.period);
+  await db.update(monthlyClosings).set({ status: "reopened", reopenedBy: input.userId, reopenedAt: new Date(), validationNote: input.note ?? "تمت إعادة فتح الفترة للمراجعة" }).where(eq(monthlyClosings.period, input.period));
+  const rows = await db.select().from(monthlyClosings).where(eq(monthlyClosings.period, input.period)).limit(1);
+  return rows[0];
+}
 export async function createApprovalTemplate(input: { requestType: "purchase" | "leave" | "expense" | "other"; name: string; organizationUnitId?: number | null; steps: Array<{ stepOrder: number; approverRole?: string; approverUserId?: number; approverDepartment?: string; minimumAmount?: number }> }) {
   const db = await getDb();
   if (!db) throw new Error("قاعدة البيانات غير متاحة");

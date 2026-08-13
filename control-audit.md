@@ -20,3 +20,12 @@ This audit records the implemented control surfaces in the Arabic RTL Sky ERP ap
 ## Verification performed
 
 TypeScript compilation was re-run after the workflow extraction and returned no errors. The development server was restarted successfully from a fresh process; the earlier transform message was stale and the current `server/db.ts` approval query is balanced at the reported location. Focused workflow-contract tests cover the draft label/live state and honest live/unavailable stage mapping. The jsdom `WorkflowStepBar` tests render and click Draft, Review, Approval, and Archive; protected admin route tests cover organization-unit and approval-template update happy paths plus audit calls. Report-opening behavior remains covered by the existing report navigation implementation and contract tests. The full suite passes 36 tests. The new jsdom `DashboardReportCards` suite renders the actual dashboard component and verifies all four accessible metric-card report links, their KPI-specific report destinations, the report-center and performance-report buttons, the financial quick tile, date-range callbacks, and visible notifications. The costing implementation was recompiled after adding blueprint-aligned cost-type scenarios and profitability KPI summaries; the fresh dev server reports no TypeScript or LSP errors. Responsive screenshots were captured at 1280×900 and 390×844; both show stable RTL layout, stacked KPI cards, date controls, chart, quick tiles, and the mobile menu trigger.
+
+
+## Financial closing, Excel, imports, and sidebar controls
+
+- **Monthly closing:** `closing.list`, `closing.open`, `closing.close`, and `closing.reopen` are protected tRPC procedures backed by the persistent monthly-closing table. Close and reopen operations record actor audit events. The `YYYY-MM` validation regex was corrected and covered by protected route tests.
+- **Statements and exports:** financial reports and the closing workspace expose Excel actions; reusable module/report shells provide consistent Excel export and blank-template affordances where applicable.
+- **Additive imports:** master-data import paths add validated rows, preserve existing records, and expose duplicate/error information instead of replacing records.
+- **Sidebar scroll lock:** the mobile drawer stores and restores the previous body overflow style, preventing the background page from scrolling while the drawer is open.
+- **Verification:** TypeScript passes and Vitest passes with 39 tests across 14 files, including three monthly-closing route tests.

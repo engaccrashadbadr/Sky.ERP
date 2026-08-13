@@ -193,3 +193,36 @@
 - [x] Add cost-type scenario support for actual, standard, budget, and simulation analysis
 - [x] Verify TypeScript, 36 Vitest tests, fresh dev-server startup, database/API/UI integration, and responsive desktop/mobile screenshots
 - [x] Document blueprint, costing, financial-linkage, KPI, workflow, and responsive evidence in control-audit.md
+
+
+# Financial closing, exports, imports, and sidebar reliability
+
+- [ ] Add live financial-statement workspace with period controls, statement detail, and export actions
+- [ ] Add monthly account closing controls with open/closed status, validation, audit trail, and prevention of postings into closed periods
+- [ ] Ensure every report and applicable module screen exposes an Excel export action with empty-data handling
+- [ ] Add Settings template-download and additive Excel-upload flows for every supported bulk-entry domain
+- [ ] Detect duplicate names/codes before commit, show immediate row-level warnings, and never replace existing records
+- [ ] Lock background page scroll while the mobile/sidebar drawer is open and preserve sidebar interaction
+- [ ] Add Vitest/DOM coverage for close controls, duplicate-safe imports, exports, and sidebar scroll behavior
+- [ ] Run TypeScript, Vitest, responsive/browser verification, document evidence, and save a checkpoint
+
+
+# Financial close, export, import, and sidebar completion
+
+- [x] Add financial-statement navigation and protected monthly open, close, reopen, list, and audit controls
+- [x] Add monthly-close validation totals and status history with Excel export
+- [x] Add consistent Excel export and blank-template actions to reusable module screens and existing report/settings screens
+- [x] Preserve additive import behavior with preview, duplicate/error reporting, and no replacement of existing records
+- [x] Lock mobile sidebar body scrolling while open and restore the previous overflow style on close/unmount
+- [x] Run TypeScript and 36 Vitest tests; restart the server successfully and document the final evidence
+
+
+# Financial close, export, import, and sidebar completion
+
+- [x] Add financial-statement navigation and protected monthly open, close, reopen, list, and audit controls
+- [x] Add monthly-close validation totals and status history with Excel export
+- [x] Add consistent Excel export and blank-template actions to reusable module screens and existing report/settings screens
+- [x] Preserve additive import behavior with preview, duplicate/error reporting, and no replacement of existing records
+- [x] Lock mobile sidebar body scrolling while open and restore the previous overflow style on close/unmount
+- [x] Correct YYYY-MM period validation and add protected monthly-close route coverage
+- [x] Run TypeScript and 39 Vitest tests across 14 files; restart the server successfully and document the final evidence
