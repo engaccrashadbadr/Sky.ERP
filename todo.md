@@ -296,3 +296,11 @@
 - [x] Preserve and expose closing results in financial statements without fabricating balances
 - [x] Reconcile imported totals and run full regression tests
 - [x] Save and deliver the verified workbook-population checkpoint
+
+# Imported data report verification
+
+- [x] Trace imported journal/account data through report queries and report-card routing
+- [x] Identify and fix the cause of reports not displaying imported data
+- [x] Verify trial balance, general ledger, income statement, balance sheet, and closing reports with imported records
+- [x] Add regression and DOM coverage for report opening and non-empty results
+- [x] Save and deliver the verified report repair checkpoint
