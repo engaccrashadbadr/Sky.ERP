@@ -10,7 +10,7 @@
     "build:pages": "vite build",
     "start": "NODE_ENV=production node dist/index.js",
     "start:lan": "NODE_ENV=production HOST=0.0.0.0 node dist/index.js",
-    "desktop:build": "pnpm build && electron-builder --win nsis",
+    "desktop:build": "pnpm build && electron-builder --win nsis --publish never",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
