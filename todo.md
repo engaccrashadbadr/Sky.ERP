@@ -226,3 +226,6 @@
 - [x] Lock mobile sidebar body scrolling while open and restore the previous overflow style on close/unmount
 - [x] Correct YYYY-MM period validation and add protected monthly-close route coverage
 - [x] Run TypeScript and 39 Vitest tests across 14 files; restart the server successfully and document the final evidence
+
+- [x] Repair sidebar motion, open/close transition, and pointer interaction behavior across desktop and mobile
+- [x] Verify sidebar responsive behavior with tests and screenshots, then save a checkpoint

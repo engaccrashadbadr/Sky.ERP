@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { exportToExcel, exportToPdf, type ExportRow } from "@/lib/reportExport";
@@ -91,6 +91,16 @@ export default function Home() {
   const navigateDashboard = (target: string) => { if (target.startsWith("reports:")) { setReportFocus(target.slice("reports:".length)); setSection("reports"); } else setSection(target); };
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showQuick, setShowQuick] = useState(false);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    if (sidebarOpen && window.matchMedia("(max-width: 1024px)").matches) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [sidebarOpen]);
   const [dashboardFrom, setDashboardFrom] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10));
   const [dashboardTo, setDashboardTo] = useState(() => new Date().toISOString().slice(0, 10));
   const dashboardRange = useMemo(() => ({ from: dashboardFrom ? new Date(`${dashboardFrom}T00:00:00`) : undefined, to: dashboardTo ? new Date(`${dashboardTo}T23:59:59`) : undefined }), [dashboardFrom, dashboardTo]);
@@ -120,7 +130,11 @@ export default function Home() {
       <p className="side-label">الوحدات الرئيسية</p><nav className="space-y-3">{navGroups.map(group => <div key={group.label}><p className="mb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{group.label}</p>{group.items.map(item => { const Icon = item.icon; return <button key={item.id} onClick={() => { setActive(item.id); setSidebarOpen(false); }} className={`side-link ${active === item.id ? "active" : ""}`}><Icon className="h-[18px] w-[18px]" /><span>{item.label}</span>{item.id === "assistant" && <span className="ai-dot" />}</button>; })}</div>)}</nav>
       <div className="sidebar-bottom"><button className="side-link"><Settings2 className="h-[18px] w-[18px]" />الإعدادات</button><div className="user-row"><div className="user-avatar">{user?.name?.slice(0, 1) ?? "م"}</div><div className="min-w-0"><p className="truncate text-sm font-bold">{user?.name ?? "المستخدم"}</p><p className="text-xs text-muted-foreground">{user?.role === "admin" ? "مدير النظام" : "محاسب"}</p></div><button onClick={() => logout()} title="تسجيل الخروج"><LogOut className="h-4 w-4 text-muted-foreground" /></button></div></div>
     </aside>
-    {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
+    <div
+      className={`sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+      aria-hidden={!sidebarOpen}
+      onClick={() => setSidebarOpen(false)}
+    />
     <main className="app-main">
       <header className="topbar"><div className="flex items-center gap-3"><button className="menu-button" onClick={() => setSidebarOpen(true)}><Menu /></button><div><p className="text-xs text-muted-foreground">الأربعاء، 13 أغسطس 2026</p><h1 className="text-xl font-black">{selectedLabel}</h1></div></div><div className="flex items-center gap-2"><button className="icon-button"><Search /></button><button className="icon-button relative"><Bell /><span className="notification-dot" /></button><Button className="quick-button" onClick={() => setShowQuick(true)}><Plus className="h-4 w-4" />إضافة جديدة</Button></div></header>
       <div className="page-content">
