@@ -7,27 +7,24 @@ function safeFileName(value: string) {
 }
 
 export function exportToExcel(title: string, rows: ExportRow[]) {
-  // SheetJS can emit an invalid/empty workbook in some browser environments when
-  // json_to_sheet receives an empty array. Build a real blank worksheet instead.
-  const worksheet = rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([]);
+  const worksheet = rows.length ? XLSX.utils.json_to_sheet(rows) : XLSX.utils.aoa_to_sheet([["لا توجد بيانات"]]);
   worksheet["!dir"] = "rtl";
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "التقرير");
   const fileName = `${safeFileName(title)}.xlsx`;
-  try {
-    XLSX.writeFile(workbook, fileName);
-  } catch {
-    // Fallback for restricted browser environments: serialize the workbook to an
-    // ArrayBuffer and trigger a normal anchor download instead of failing silently.
-    const bytes = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
-    const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = fileName;
-    anchor.click();
-    URL.revokeObjectURL(url);
-  }
+  const bytes = XLSX.write(workbook, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+  if (typeof document === "undefined" || typeof URL === "undefined") { XLSX.writeFile(workbook, fileName); return true; }
+  const blob = new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = fileName;
+  anchor.rel = "noopener";
+  anchor.style.display = "none";
+  document.body.appendChild(anchor);
+  anchor.click();
+  window.setTimeout(() => { anchor.remove(); URL.revokeObjectURL(url); }, 250);
+  return true;
 }
 
 export function exportToPdf(title: string, rows: ExportRow[]) {

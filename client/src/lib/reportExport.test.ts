@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const writeFile = vi.hoisted(() => vi.fn());
+const write = vi.hoisted(() => vi.fn(() => new Uint8Array([1, 2, 3])));
 vi.mock("xlsx", () => ({
   utils: {
     json_to_sheet: vi.fn(() => ({})),
@@ -9,6 +10,7 @@ vi.mock("xlsx", () => ({
     book_append_sheet: vi.fn(),
   },
   writeFile,
+  write,
 }));
 
 import { exportToExcel, exportToPdf } from "./reportExport";
@@ -28,7 +30,7 @@ describe("report export utilities", () => {
   it("creates a valid blank Excel worksheet when the report has no rows", async () => {
     const { utils } = await import("xlsx");
     exportToExcel("تقرير فارغ", []);
-    expect(utils.aoa_to_sheet).toHaveBeenCalledWith([]);
+    expect(utils.aoa_to_sheet).toHaveBeenCalledWith([["لا توجد بيانات"]]);
     expect(writeFile).toHaveBeenCalledOnce();
   });
 

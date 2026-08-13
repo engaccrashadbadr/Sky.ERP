@@ -264,3 +264,16 @@
 - [x] Add administration UI for managing permission templates and assignments
 - [x] Add authorization tests, regression checks, and responsive verification
 - [x] Save and deliver the verified granular-permissions checkpoint
+
+# Accounting, workflow, and interaction repair pass
+
+- [x] Repair Excel exports and blank-template downloads in accounting, ledger, closing, sales, purchasing, and costing screens
+- [x] Add contextual account creation for main and sub-accounts in the chart of accounts
+- [x] Make journal-entry account/party selection searchable across customers, suppliers, accounts, and other debit/credit counterparties
+- [x] Activate ledger date-range controls and validate report filtering
+- [x] Strengthen monthly closing validation, difference handling, and closing workflow feedback
+- [x] Add visible product coding entry controls inside the costing/inventory context
+- [x] Replace or contextualize global add, notification, and search toolbar actions with working behavior
+- [x] Implement sales/purchasing draft, review, approval, posting, payment, and settlement-direction workflow actions
+- [x] Add regression and DOM tests for the repaired flows and verify the full suite
+- [ ] Save and deliver the verified repair checkpoint
