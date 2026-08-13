@@ -157,3 +157,8 @@
 - [x] Wire and verify available review and approval steps to the live pending-request queue; keep archive explicitly unavailable until a closeout source/action exists
 - [x] Add focused rendered UI/component coverage for draft, review, approval, and archive through the jsdom WorkflowStepBar harness; report-opening routing remains covered by the existing workflow/report contract and navigation implementation; retain protected-router authorization coverage
 - [x] Perform authenticated browser verification of the workflow step bar and key dashboard/report controls, or document the exact OAuth limitation per control; OAuth limitation documented in control-audit.md
+
+# Dashboard report-card DOM verification
+
+- [x] Add comprehensive DOM tests for dashboard report-opening cards, including accessible labels, click routing, date filters, notifications, and all supported report destinations
+- [x] Run TypeScript and Vitest validation for the dashboard report-card tests and save a verified checkpoint; TypeScript passes and 36 tests pass across 13 files
