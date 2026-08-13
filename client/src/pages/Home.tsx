@@ -3,6 +3,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { exportToExcel, exportToPdf } from "@/lib/reportExport";
 import { workflowStepDefinitions } from "@/lib/workflowSteps";
+import { WorkflowStepBar } from "@/components/WorkflowStepBar";
 import * as XLSX from "xlsx";
 import { startLogin } from "@/const";
 import { Button } from "@/components/ui/button";
@@ -226,7 +227,7 @@ function AuditAndApprovalPanel() {
           : () => setWorkflowFocus("approve"),
   }));
   return <div className="space-y-5 mb-5">
-    <Card><CardHeader><CardTitle>دورة مستندية تفاعلية</CardTitle><p className="text-sm text-muted-foreground">اضغط على الخطوة المطلوبة؛ مسودة تفتح نموذج الطلب، وبقية الخطوات توضح الإجراء المتاح حسب حالة الطلب.</p></CardHeader><CardContent><div className="grid gap-2 sm:grid-cols-5">{workflowSteps.map(step => <Button key={step.id} type="button" variant={step.id === "draft" ? "default" : "outline"} className="justify-center" onClick={step.action}>{step.label}{!step.live && " — لاحقاً"}</Button>)}</div></CardContent></Card>
+    <Card><CardHeader><CardTitle>دورة مستندية تفاعلية</CardTitle><p className="text-sm text-muted-foreground">اضغط على الخطوة المطلوبة؛ مسودة تفتح نموذج الطلب، وبقية الخطوات توضح الإجراء المتاح حسب حالة الطلب.</p></CardHeader><CardContent><WorkflowStepBar onDraft={() => workflowSteps.find(step => step.id === "draft")?.action()} onFocus={stepId => workflowSteps.find(step => step.id === stepId)?.action()} /></CardContent></Card>
     {workflowFocus && <Card className="border-primary/30 bg-primary/5">
       <CardHeader><CardTitle>{workflowFocus === "review" ? "مراجعة الطلبات المعلقة" : workflowFocus === "approve" ? "قائمة الاعتماد" : "الأرشفة"}</CardTitle>
         <p className="text-sm text-muted-foreground">{workflowFocus === "archive" ? "الأرشفة غير مفعلة حتى تكتمل دورة الإغلاق ومصدر المستند النهائي." : "هذه لوحة حية مرتبطة بطلبات الموافقة الحالية؛ استخدم الإجراءات الظاهرة على كل طلب."}</p>

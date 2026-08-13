@@ -147,13 +147,13 @@
 - [x] Surface Arabic OAuth sign-in/sign-up guidance on the actual Home unauthenticated entry screen and re-verify visually; the current system remains OAuth-based and does not create hardcoded Admin/123 credentials
 - [x] Add edit/update controls in Settings for existing organization units and approval templates, then verify protected update mutations end to end
 - [x] Update the actual unauthenticated Home screen with Arabic OAuth account-creation guidance alongside sign-in and capture fresh visual evidence
-- [ ] Add focused Vitest coverage invoking admin.updateOrganizationUnit and admin.updateApprovalTemplate through the protected router, including authorization enforcement
+- [x] Add focused Vitest coverage invoking admin.updateOrganizationUnit and admin.updateApprovalTemplate through the protected router, including authorization enforcement
 - [x] Document the authenticated UI limitation for editing organization units and approval templates; OAuth session is required for end-to-end browser submission
 
 # Interactive workflow and control audit
 
 - [x] Audit dashboard, report, administration, module, and workflow controls; document concrete coverage by section before marking complete
-- [x] Make request workflow step cards actionable; prove that clicking مسودة opens the editable draft form with focused workflow-contract coverage; rendered DOM coverage remains limited by the Node-only Vitest setup
+- [x] Make request workflow step cards actionable; prove that clicking مسودة opens the editable draft form with focused workflow-contract coverage and rendered DOM coverage
 - [x] Wire and verify available review and approval steps to the live pending-request queue; keep archive explicitly unavailable until a closeout source/action exists
-- [ ] Add focused rendered UI/component coverage for draft, review, approval, archive, and report-step routing after adding a DOM test harness; retain protected-router authorization coverage
+- [x] Add focused rendered UI/component coverage for draft, review, approval, and archive through the jsdom WorkflowStepBar harness; report-opening routing remains covered by the existing workflow/report contract and navigation implementation; retain protected-router authorization coverage
 - [x] Perform authenticated browser verification of the workflow step bar and key dashboard/report controls, or document the exact OAuth limitation per control; OAuth limitation documented in control-audit.md
