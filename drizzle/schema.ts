@@ -403,6 +403,41 @@ export const monthlyClosings = mysqlTable("monthlyClosings", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
+export const projects = mysqlTable("projects", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 80 }).notNull().unique(),
+  name: varchar("name", { length: 180 }).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const bankReconciliations = mysqlTable("bankReconciliations", {
+  id: int("id").autoincrement().primaryKey(),
+  sourceKey: varchar("sourceKey", { length: 160 }).notNull().unique(),
+  reconciliationDate: timestamp("reconciliationDate").notNull(),
+  documentNumber: varchar("documentNumber", { length: 80 }),
+  accountName: varchar("accountName", { length: 180 }),
+  statementDebit: decimal("statementDebit", { precision: 18, scale: 2 }).default("0").notNull(),
+  statementCredit: decimal("statementCredit", { precision: 18, scale: 2 }).default("0").notNull(),
+  description: text("description"),
+  status: mysqlEnum("status", ["unmatched", "matched", "review"]).default("review").notNull(),
+  sourceJson: text("sourceJson").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export const legacyTransactions = mysqlTable("legacyTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  sourceKey: varchar("sourceKey", { length: 200 }).notNull().unique(),
+  sourceWorkbook: varchar("sourceWorkbook", { length: 180 }).notNull(),
+  sourceSheet: varchar("sourceSheet", { length: 120 }).notNull(),
+  sourceRow: int("sourceRow").notNull(),
+  module: varchar("module", { length: 80 }).notNull(),
+  documentType: varchar("documentType", { length: 80 }),
+  journalEntryId: int("journalEntryId"),
+  sourceJson: text("sourceJson").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Account = typeof accounts.$inferSelect;

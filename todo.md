@@ -285,3 +285,14 @@
 - [x] Add contextual template-download controls to each supported input screen
 - [x] Verify workbook downloads, headers, empty-row behavior, and compatibility with additive import
 - [x] Save and deliver the verified template release
+
+# ZatTRXLine workbook population
+
+- [x] Profile all workbook sheets, columns, row counts, and transaction categories
+- [x] Map workbook entities to accounts, parties, products, invoices, journals, and closing data
+- [x] Identify unsupported workbook sections and define suitable ERP module extensions
+- [x] Implement safe additive import with duplicate detection, validation, and audit trail
+- [x] Generate missing account and sub-account codes using a consistent chart-of-accounts policy
+- [x] Preserve and expose closing results in financial statements without fabricating balances
+- [x] Reconcile imported totals and run full regression tests
+- [x] Save and deliver the verified workbook-population checkpoint
