@@ -276,4 +276,4 @@
 - [x] Replace or contextualize global add, notification, and search toolbar actions with working behavior
 - [x] Implement sales/purchasing draft, review, approval, posting, payment, and settlement-direction workflow actions
 - [x] Add regression and DOM tests for the repaired flows and verify the full suite
-- [ ] Save and deliver the verified repair checkpoint
+- [x] Save and deliver the verified repair checkpoint
