@@ -2,6 +2,8 @@ import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import type { TrpcContext } from "./context";
+import { canUserAccessPermission } from "../db";
+import type { PermissionKey } from "../permissions";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
@@ -26,6 +28,15 @@ const requireUser = t.middleware(async opts => {
 });
 
 export const protectedProcedure = t.procedure.use(requireUser);
+
+export const permissionedProcedure = (permissionKey: PermissionKey, message = "لا تملك الصلاحية المطلوبة لتنفيذ هذه العملية") =>
+  t.procedure.use(requireUser).use(t.middleware(async opts => {
+    const { ctx, next } = opts;
+    if (!ctx.user || !(await canUserAccessPermission(ctx.user, permissionKey))) {
+      throw new TRPCError({ code: "FORBIDDEN", message });
+    }
+    return next({ ctx: { ...ctx, user: ctx.user } });
+  }));
 
 const requireTemplates = (templates: string[], message: string) => t.middleware(async opts => {
   const { ctx, next } = opts;

@@ -14,6 +14,17 @@ export const users = mysqlTable("users", {
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
+export const permissionRules = mysqlTable("permissionRules", {
+  id: int("id").autoincrement().primaryKey(),
+  subjectType: mysqlEnum("subjectType", ["role", "department", "template"]).notNull(),
+  subjectValue: varchar("subjectValue", { length: 120 }).notNull(),
+  permissionKey: varchar("permissionKey", { length: 100 }).notNull(),
+  effect: boolean("effect").default(true).notNull(),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export const currencies = mysqlTable("currencies", {
   id: int("id").autoincrement().primaryKey(),
   code: varchar("code", { length: 3 }).notNull().unique(),

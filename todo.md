@@ -255,3 +255,12 @@
 - [x] Resolve regressions and newly discovered issues from the improvement pass, with tests and responsive verification
 
 - [x] Fix the malformed report period state declaration discovered during validation and rerun the full test/build checks
+
+# Granular role and department permissions
+
+- [x] Define permission keys for every report and protected operational action
+- [x] Persist role/department permission assignments and audit changes
+- [x] Enforce granular permissions in backend procedures and frontend controls
+- [x] Add administration UI for managing permission templates and assignments
+- [x] Add authorization tests, regression checks, and responsive verification
+- [ ] Save and deliver the verified granular-permissions checkpoint

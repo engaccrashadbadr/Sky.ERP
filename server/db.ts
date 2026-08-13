@@ -1,8 +1,9 @@
 import { and, desc, eq, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { ENV } from "./_core/env";
-import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs, costCenters, costElements, productCosts, costAllocations, costTypes, costingMethods, boms, bomLines, workOrders, workOrderOperations, costDistributions, monthlyClosings } from "../drizzle/schema";
+import { InsertUser, users, permissionRules, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs, costCenters, costElements, productCosts, costAllocations, costTypes, costingMethods, boms, bomLines, workOrders, workOrderOperations, costDistributions, monthlyClosings } from "../drizzle/schema";
 import { storagePut } from "./storage";
+import { PERMISSION_DEFINITIONS, type PermissionKey, type PermissionRuleSubject } from "./permissions";
 import { notifyOwner } from "./_core/notification";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -34,6 +35,36 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 export async function updateUserRole(userId: number, role: "user" | "accountant" | "admin") { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.update(users).set({ role, updatedAt: new Date() }).where(eq(users.id, userId)); }
 export async function listUsers() { const db = await getDb(); return db ? db.select({ id: users.id, name: users.name, email: users.email, role: users.role, department: users.department, permissionTemplate: users.permissionTemplate, lastSignedIn: users.lastSignedIn }).from(users).orderBy(desc(users.lastSignedIn)) : []; }
 export async function updateUserAccess(input: { userId: number; department?: string; permissionTemplate?: string }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.update(users).set({ department: input.department, permissionTemplate: input.permissionTemplate ?? "تشغيل عام", updatedAt: new Date() }).where(eq(users.id, input.userId)); }
+
+const templatePermissionKeys: Record<string, PermissionKey[]> = {
+  "تشغيل عام": ["dashboard.view", "reports.catalog", "reports.financial", "reports.aging", "reports.cashFlow", "reports.modules", "accounts.view", "parties.view", "products.view", "invoices.view", "employees.view", "attendance.view", "currencies.view", "closing.view", "workflows.view", "costing.view"],
+  "قراءة فقط": ["dashboard.view", "reports.catalog", "reports.financial", "reports.aging", "reports.cashFlow", "reports.modules", "accounts.view", "parties.view", "products.view", "invoices.view", "employees.view", "attendance.view", "currencies.view", "closing.view", "workflows.view", "costing.view"],
+  "المحاسبة": ["dashboard.view", "reports.catalog", "reports.financial", "reports.aging", "reports.cashFlow", "reports.modules", "reports.audit", "accounts.view", "accounts.create", "accounts.manage", "parties.view", "parties.create", "parties.payments", "invoices.view", "invoices.create", "currencies.view", "currencies.manage", "closing.view", "closing.manage", "imports.masterData", "workflows.view", "workflows.create", "costing.view", "costing.manage", "audit.view", "assistant.use"],
+  "المبيعات": ["dashboard.view", "reports.catalog", "reports.aging", "parties.view", "parties.create", "parties.payments", "products.view", "invoices.view", "invoices.create", "workflows.view", "workflows.create"],
+  "المشتريات": ["dashboard.view", "reports.catalog", "reports.aging", "parties.view", "parties.create", "parties.payments", "products.view", "invoices.view", "invoices.create", "workflows.view", "workflows.create"],
+  "المخزون": ["dashboard.view", "reports.catalog", "products.view", "products.create", "inventory.move", "costing.view"],
+  "نقطة البيع": ["dashboard.view", "products.view", "invoices.view", "invoices.create", "parties.view", "parties.payments", "inventory.move"],
+};
+
+export async function canUserAccessPermission(user: { id: number; role: string; department?: string | null; permissionTemplate?: string | null }, permissionKey: PermissionKey) {
+  if (user.role === "admin") return true;
+  const db = await getDb();
+  if (!db) return user.role === "accountant" || (templatePermissionKeys[user.permissionTemplate ?? "تشغيل عام"] ?? []).includes(permissionKey);
+  const subjects: Array<{ subjectType: PermissionRuleSubject; subjectValue: string }> = [
+    { subjectType: "role", subjectValue: user.role },
+    ...(user.department ? [{ subjectType: "department" as const, subjectValue: user.department }] : []),
+    ...(user.permissionTemplate ? [{ subjectType: "template" as const, subjectValue: user.permissionTemplate }] : []),
+  ];
+  const rules = await db.select({ subjectType: permissionRules.subjectType, subjectValue: permissionRules.subjectValue, effect: permissionRules.effect }).from(permissionRules).where(or(...subjects.map(subject => and(eq(permissionRules.subjectType, subject.subjectType), eq(permissionRules.subjectValue, subject.subjectValue), eq(permissionRules.permissionKey, permissionKey)))));
+  if (rules.some(rule => rule.effect === false)) return false;
+  if (rules.some(rule => rule.effect === true)) return true;
+  return user.role === "accountant" || (templatePermissionKeys[user.permissionTemplate ?? "تشغيل عام"] ?? []).includes(permissionKey);
+}
+
+export async function listPermissionRules() { const db = await getDb(); return db ? db.select().from(permissionRules).orderBy(permissionRules.subjectType, permissionRules.subjectValue, permissionRules.permissionKey) : []; }
+export async function upsertPermissionRule(input: { subjectType: PermissionRuleSubject; subjectValue: string; permissionKey: PermissionKey; effect: boolean; createdBy: number }) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); const existing = await db.select({ id: permissionRules.id }).from(permissionRules).where(and(eq(permissionRules.subjectType, input.subjectType), eq(permissionRules.subjectValue, input.subjectValue), eq(permissionRules.permissionKey, input.permissionKey))).limit(1); if (existing[0]) return db.update(permissionRules).set({ effect: input.effect, updatedAt: new Date() }).where(eq(permissionRules.id, existing[0].id)); return db.insert(permissionRules).values(input); }
+export async function deletePermissionRule(id: number) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.delete(permissionRules).where(eq(permissionRules.id, id)); }
+export function getPermissionDefinitions() { return PERMISSION_DEFINITIONS; }
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb(); if (!db) return undefined;
