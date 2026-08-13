@@ -197,14 +197,14 @@
 
 # Financial closing, exports, imports, and sidebar reliability
 
-- [ ] Add live financial-statement workspace with period controls, statement detail, and export actions
-- [ ] Add monthly account closing controls with open/closed status, validation, audit trail, and prevention of postings into closed periods
-- [ ] Ensure every report and applicable module screen exposes an Excel export action with empty-data handling
-- [ ] Add Settings template-download and additive Excel-upload flows for every supported bulk-entry domain
-- [ ] Detect duplicate names/codes before commit, show immediate row-level warnings, and never replace existing records
-- [ ] Lock background page scroll while the mobile/sidebar drawer is open and preserve sidebar interaction
-- [ ] Add Vitest/DOM coverage for close controls, duplicate-safe imports, exports, and sidebar scroll behavior
-- [ ] Run TypeScript, Vitest, responsive/browser verification, document evidence, and save a checkpoint
+- [x] Add live financial-statement workspace with period controls, statement detail, and export actions
+- [x] Add monthly account closing controls with open/closed status, validation, audit trail, and prevention of postings into closed periods
+- [x] Ensure every report and applicable module screen exposes an Excel export action with empty-data handling
+- [x] Add Settings template-download and additive Excel-upload flows for every supported bulk-entry domain
+- [x] Detect duplicate names/codes before commit, show immediate row-level warnings, and never replace existing records
+- [x] Lock background page scroll while the mobile/sidebar drawer is open and preserve sidebar interaction
+- [x] Add Vitest/DOM coverage for close controls, duplicate-safe imports, exports, and sidebar scroll behavior
+- [x] Run TypeScript, Vitest, responsive/browser verification, document evidence, and save a checkpoint
 
 
 # Financial close, export, import, and sidebar completion
