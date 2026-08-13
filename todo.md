@@ -304,3 +304,12 @@
 - [x] Verify trial balance, general ledger, income statement, balance sheet, and closing reports with imported records
 - [x] Add regression and DOM coverage for report opening and non-empty results
 - [x] Save and deliver the verified report repair checkpoint
+
+# Performance optimization pass
+
+- [x] Profile slow database queries, report aggregation, API payloads, LAN refreshes, and frontend rendering
+- [x] Optimize database indexes, query limits, report aggregation, and server-side pagination
+- [x] Reduce unnecessary frontend rerenders, eager data loads, and synchronization traffic
+- [x] Add loading, caching, and error-boundary improvements without hiding accounting errors
+- [x] Benchmark key workflows and run the complete regression suite
+- [x] Save and deliver the verified performance checkpoint

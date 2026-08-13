@@ -242,11 +242,12 @@ function EnhancedReports({ summary, parties, invoices, currencies, products, emp
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const reportDates = useMemo(() => ({ from: from ? new Date(`${from}T00:00:00`) : undefined, to: to ? new Date(`${to}T23:59:59.999`) : undefined }), [from, to]);
-  const liveReports = trpc.reports.financial.useQuery(reportDates, { enabled: true });
+  const reportsActive = reportType === "financial";
+  const liveReports = trpc.reports.financial.useQuery(reportDates, { enabled: reportsActive, staleTime: 30_000, refetchOnWindowFocus: false });
   const [agingPartyType, setAgingPartyType] = useState<"all" | "customer" | "supplier">("all");
   const agingInput = useMemo(() => ({ asOf: reportDates.to ?? new Date(), partyType: agingPartyType === "all" ? undefined : agingPartyType }), [reportDates.to, agingPartyType]);
-  const agingReport = trpc.reports.aging.useQuery(agingInput, { enabled: true });
-  const cashFlowReport = trpc.reports.cashFlow.useQuery(reportDates, { enabled: true });
+  const agingReport = trpc.reports.aging.useQuery(agingInput, { enabled: reportsActive, staleTime: 30_000, refetchOnWindowFocus: false });
+  const cashFlowReport = trpc.reports.cashFlow.useQuery(reportDates, { enabled: reportsActive, staleTime: 30_000, refetchOnWindowFocus: false });
   const oracleCatalog = trpc.reports.catalog.useQuery({});
   const [reportGroup, setReportGroup] = useState<"financial" | "generalLedger" | "payables" | "receivables" | "fixedAssets" | "cashManagement" | "sales" | "purchases" | "inventory" | "customers" | "suppliers" | "hr" | "pos" | "tax" | "management">("financial");
   const [selectedOperationalReport, setSelectedOperationalReport] = useState("");

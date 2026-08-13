@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, lte, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { ENV } from "./_core/env";
 import { InsertUser, users, permissionRules, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs, costCenters, costElements, productCosts, costAllocations, costTypes, costingMethods, boms, bomLines, workOrders, workOrderOperations, costDistributions, monthlyClosings } from "../drizzle/schema";
@@ -306,14 +306,19 @@ export function calculateDetailedReportSections(trialBalance: DetailedReportRow[
 export async function getFinancialReports(input: { from?: Date; to?: Date }) {
   const db = await getDb();
   if (!db) return { trialBalance: [], incomeStatement: { revenue: 0, expenses: 0, netIncome: 0 }, balanceSheet: { assets: 0, liabilities: 0, equity: 0 }, generalLedger: [], cashFlow: { inflow: 0, outflow: 0, net: 0 }, taxSummary: { totalTax: 0, salesTax: 0, purchaseTax: 0, netTax: 0, taxableSales: 0, taxablePurchases: 0, invoiceCount: 0, byType: [] } };
-  const entries = await db.select({ id: journalEntries.id, date: journalEntries.entryDate, description: journalEntries.description }).from(journalEntries);
-  const lines = await db.select({ journalEntryId: journalLines.journalEntryId, accountId: journalLines.accountId, debit: journalLines.debit, credit: journalLines.credit, accountCode: accounts.code, accountName: accounts.name, category: accounts.category }).from(journalLines).leftJoin(accounts, eq(journalLines.accountId, accounts.id));
-  const invoiceRows = await db.select({ invoiceDate: invoices.invoiceDate, tax: invoices.tax, type: invoices.type, total: invoices.total, paid: invoices.paid }).from(invoices);
-  const from = input.from?.getTime() ?? -Infinity; const to = input.to?.getTime() ?? Infinity;
-  const entryMap = new Map(entries.filter(entry => entry.date.getTime() >= from && entry.date.getTime() <= to).map(entry => [entry.id, entry]));
+  const entryFilters = [
+    ...(input.from ? [gte(journalEntries.entryDate, input.from)] : []),
+    ...(input.to ? [lte(journalEntries.entryDate, input.to)] : []),
+  ];
+  const lines = await db.select({ journalEntryId: journalLines.journalEntryId, accountId: journalLines.accountId, date: journalEntries.entryDate, description: journalEntries.description, debit: journalLines.debit, credit: journalLines.credit, accountCode: accounts.code, accountName: accounts.name, category: accounts.category }).from(journalLines).innerJoin(journalEntries, eq(journalLines.journalEntryId, journalEntries.id)).leftJoin(accounts, eq(journalLines.accountId, accounts.id)).where(entryFilters.length ? and(...entryFilters) : undefined);
+  const invoiceFilters = [
+    ...(input.from ? [gte(invoices.invoiceDate, input.from)] : []),
+    ...(input.to ? [lte(invoices.invoiceDate, input.to)] : []),
+  ];
+  const invoiceRows = await db.select({ invoiceDate: invoices.invoiceDate, tax: invoices.tax, type: invoices.type, total: invoices.total, paid: invoices.paid }).from(invoices).where(invoiceFilters.length ? and(...invoiceFilters) : undefined);
   const grouped = new Map<number, { accountCode: string; accountName: string; category: string; debit: number; credit: number }>();
   const ledger = [] as Array<{ date: Date; description: string; accountCode: string; accountName: string; debit: number; credit: number }>;
-  for (const line of lines) { const entry = entryMap.get(line.journalEntryId); if (!entry) continue; const debit = Number(line.debit); const credit = Number(line.credit); const current = grouped.get(line.accountId) ?? { accountCode: line.accountCode ?? "", accountName: line.accountName ?? "", category: line.category ?? "asset", debit: 0, credit: 0 }; current.debit += debit; current.credit += credit; grouped.set(line.accountId, current); ledger.push({ date: entry.date, description: entry.description, accountCode: current.accountCode, accountName: current.accountName, debit, credit }); }
+  for (const line of lines) { const debit = Number(line.debit); const credit = Number(line.credit); const current = grouped.get(line.accountId) ?? { accountCode: line.accountCode ?? "", accountName: line.accountName ?? "", category: line.category ?? "asset", debit: 0, credit: 0 }; current.debit += debit; current.credit += credit; grouped.set(line.accountId, current); ledger.push({ date: line.date, description: line.description, accountCode: current.accountCode, accountName: current.accountName, debit, credit }); }
   const trialBalance = Array.from(grouped.values()).map(row => ({ ...row, balance: row.debit - row.credit }));
   const revenue = trialBalance.filter(row => row.category === "revenue").reduce((sum, row) => sum + (row.credit - row.debit), 0);
   const expenses = trialBalance.filter(row => row.category === "expense").reduce((sum, row) => sum + (row.debit - row.credit), 0);
@@ -321,8 +326,7 @@ export async function getFinancialReports(input: { from?: Date; to?: Date }) {
   const liabilities = trialBalance.filter(row => row.category === "liability").reduce((sum, row) => sum - row.balance, 0);
   const equity = trialBalance.filter(row => row.category === "equity").reduce((sum, row) => sum - row.balance, 0);
   const generalLedger = ledger.sort((a, b) => a.date.getTime() - b.date.getTime());
-  const filteredInvoices = invoiceRows.filter(invoice => invoice.invoiceDate.getTime() >= from && invoice.invoiceDate.getTime() <= to);
-  const details = calculateDetailedReportSections(trialBalance, generalLedger, filteredInvoices);
+  const details = calculateDetailedReportSections(trialBalance, generalLedger, invoiceRows);
   return { trialBalance, generalLedger, ...details };
 }
 

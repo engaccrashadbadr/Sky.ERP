@@ -1,4 +1,4 @@
-import { boolean, decimal, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { boolean, decimal, index, int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -57,7 +57,10 @@ export const journalEntries = mysqlTable("journalEntries", {
   status: mysqlEnum("status", ["draft", "posted"]).default("draft").notNull(),
   createdBy: int("createdBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  entryDateIdx: index("journal_entries_entry_date_idx").on(table.entryDate),
+  statusDateIdx: index("journal_entries_status_date_idx").on(table.status, table.entryDate),
+}));
 
 export const journalLines = mysqlTable("journalLines", {
   id: int("id").autoincrement().primaryKey(),
@@ -66,7 +69,10 @@ export const journalLines = mysqlTable("journalLines", {
   debit: decimal("debit", { precision: 18, scale: 2 }).default("0").notNull(),
   credit: decimal("credit", { precision: 18, scale: 2 }).default("0").notNull(),
   note: text("note"),
-});
+}, (table) => ({
+  entryIdx: index("journal_lines_entry_idx").on(table.journalEntryId),
+  accountIdx: index("journal_lines_account_idx").on(table.accountId),
+}));
 
 export const parties = mysqlTable("parties", {
   id: int("id").autoincrement().primaryKey(),
@@ -114,7 +120,10 @@ export const invoices = mysqlTable("invoices", {
   exchangeRate: decimal("exchangeRate", { precision: 18, scale: 6 }).default("1").notNull(),
   baseTotal: decimal("baseTotal", { precision: 18, scale: 2 }).default("0").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+}, (table) => ({
+  invoiceDateIdx: index("invoices_invoice_date_idx").on(table.invoiceDate),
+  partyDateIdx: index("invoices_party_date_idx").on(table.partyId, table.invoiceDate),
+}));
 
 export const partyPayments = mysqlTable("partyPayments", {
   id: int("id").autoincrement().primaryKey(),
