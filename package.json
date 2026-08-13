@@ -1,6 +1,6 @@
 {
   "name": "enterprise-erp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "main": "electron/main.cjs",
   "license": "MIT",
@@ -132,7 +132,7 @@
     },
     "win": {
       "target": ["nsis"],
-      "artifactName": "Sky-ERP-Setup-${version}.${ext}"
+      "artifactName": "Sky-ERP-All-in-One-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,

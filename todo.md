@@ -321,3 +321,11 @@
 - [x] Add regression coverage for file URLs, local server URLs, and packaged paths
 - [x] Build and verify the corrected Windows packaging configuration
 - [x] Save and deliver the corrected Windows release checkpoint
+
+# Standalone EXE packaging follow-up
+
+- [x] Trace whether the user is running a stale Artifact or whether any installer mode still contains the Windows path bug
+- [x] Harden All-in-One, Server, and Client packaging outputs for standalone execution
+- [x] Produce and verify a fresh Windows installer artifact with the corrected entrypoint
+- [x] Document exactly which EXE to run and how to distinguish it from blockmap files
+- [x] Save and deliver the verified standalone EXE release
