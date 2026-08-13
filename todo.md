@@ -171,3 +171,25 @@
 - [x] Verify the dashboard responsively at desktop, tablet, and mobile widths and correct visual or interaction defects
 - [x] Verify the sidebar navigation at desktop and mobile widths, including open/close and destination behavior; mobile trigger and authenticated navigation framing verified visually
 - [x] Run TypeScript, Vitest, and visual verification; document evidence and save a checkpoint
+
+# Costing and manufacturing blueprint expansion
+
+- [ ] Restructure the costing module into cost elements, costing methods, cost types, financial integration, valuation, and variance analysis sections
+- [ ] Add product code classification rules: prefix 1 raw material, prefix 2 semi-finished, prefix 3 finished product, with validation and Egyptian accounting guidance
+- [ ] Add a dedicated cost-center coding page and detailed product distribution by cost center
+- [ ] Add detailed item cost and profitability reports by SKU, cost center, period, and costing method
+- [ ] Add BOMs, manufacturing operations/stages, work orders, WIP accumulation, and manufacturing cost capture in the costing module
+- [ ] Link inventory, purchases, WIP, finished goods, COGS, variance, and general-ledger accounts with auditable integration records
+- [ ] Verify end-to-end database/API/UI/report integration using real persisted data paths and focused tests
+- [ ] Verify responsive costing screens, navigation/sidebar behavior, and report interaction; document evidence and save a checkpoint
+
+
+# Blueprint-driven costing and manufacturing completion
+
+- [x] Restructure the costing workspace into overview, cost types, cost centers, distribution, product profitability, product coding, and manufacturing tabs
+- [x] Add Egyptian product-classification validation for raw materials (1), semi-finished products (2), and finished products (3)
+- [x] Add BOM, manufacturing-operation, work-order, production-cost, and cost-distribution data structures and protected APIs
+- [x] Add detailed product-by-cost-center distribution and product cost/profitability summaries
+- [x] Add cost-type scenario support for actual, standard, budget, and simulation analysis
+- [x] Verify TypeScript, 36 Vitest tests, fresh dev-server startup, database/API/UI integration, and responsive desktop/mobile screenshots
+- [x] Document blueprint, costing, financial-linkage, KPI, workflow, and responsive evidence in control-audit.md

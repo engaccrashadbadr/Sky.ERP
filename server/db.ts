@@ -1,7 +1,7 @@
 import { and, desc, eq, lt, lte, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { ENV } from "./_core/env";
-import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs, costCenters, costElements, productCosts, costAllocations } from "../drizzle/schema";
+import { InsertUser, users, accounts, parties, products, invoices, invoiceLines, employees, payrollRuns, notifications, attachments, stockMoves, journalEntries, journalLines, currencies, attendanceRecords, cashDrawerSessions, partyPayments, organizationUnits, approvalTemplates, approvalTemplateSteps, workflowRequests, workflowApprovals, auditLogs, costCenters, costElements, productCosts, costAllocations, costTypes, costingMethods, boms, bomLines, workOrders, workOrderOperations, costDistributions } from "../drizzle/schema";
 import { storagePut } from "./storage";
 import { notifyOwner } from "./_core/notification";
 
@@ -170,6 +170,35 @@ export async function getCostingSummary(input: { from?: Date; to?: Date } = {}) 
   const actualCost = filtered.reduce((sum, row) => sum + Number(row.actualCost), 0);
   const byElement = Object.values(filtered.reduce<Record<string, { costElementId: number; standardCost: number; actualCost: number }>>((acc, row) => { const key = String(row.costElementId); acc[key] ??= { costElementId: row.costElementId, standardCost: 0, actualCost: 0 }; acc[key].standardCost += Number(row.standardCost); acc[key].actualCost += Number(row.actualCost); return acc; }, {}));
   return { standardCost, actualCost, variance: actualCost - standardCost, allocationCount: (await db.select().from(costAllocations)).length, productCount: new Set(filtered.map(row => row.productId)).size, byElement };
+}
+
+export function classifyProductSku(sku: string): "raw_material" | "semi_finished" | "finished_product" {
+  const prefix = sku.trim().charAt(0);
+  if (prefix === "1" || prefix === "١") return "raw_material";
+  if (prefix === "2" || prefix === "٢") return "semi_finished";
+  if (prefix === "3" || prefix === "٣") return "finished_product";
+  throw new Error("كود الصنف يجب أن يبدأ بـ 1 مادة خام أو 2 منتج نصف مصنع أو 3 منتج تام");
+}
+export async function listCostTypes() { const db = await getDb(); return db ? db.select().from(costTypes).where(eq(costTypes.isActive, true)).orderBy(costTypes.code) : []; }
+export async function createCostType(input: typeof costTypes.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(costTypes).values(input); }
+export async function listCostingMethods() { const db = await getDb(); return db ? db.select().from(costingMethods).where(eq(costingMethods.isActive, true)).orderBy(costingMethods.code) : []; }
+export async function createCostingMethod(input: typeof costingMethods.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(costingMethods).values(input); }
+export async function listBoms(productId?: number) { const db = await getDb(); if (!db) return []; return db.select().from(boms).where(productId ? eq(boms.productId, productId) : undefined).orderBy(desc(boms.createdAt)); }
+export async function createBom(input: typeof boms.$inferInsert, lines: Array<typeof bomLines.$inferInsert>) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); const result = await db.insert(boms).values(input); const bomId = Number(result[0].insertId); if (lines.length) await db.insert(bomLines).values(lines.map(line => ({ ...line, bomId }))); return { bomId }; }
+export async function listBomLines(bomId: number) { const db = await getDb(); return db ? db.select().from(bomLines).where(eq(bomLines.bomId, bomId)).orderBy(bomLines.sequence) : []; }
+export async function listWorkOrders(status?: typeof workOrders.$inferSelect["status"]) { const db = await getDb(); return db ? db.select().from(workOrders).where(status ? eq(workOrders.status, status) : undefined).orderBy(desc(workOrders.createdAt)) : []; }
+export async function createWorkOrder(input: typeof workOrders.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(workOrders).values(input); }
+export async function createWorkOrderOperation(input: typeof workOrderOperations.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(workOrderOperations).values(input); }
+export async function listWorkOrderOperations(workOrderId: number) { const db = await getDb(); return db ? db.select().from(workOrderOperations).where(eq(workOrderOperations.workOrderId, workOrderId)).orderBy(workOrderOperations.sequence) : []; }
+export async function listCostDistributions(input: { period?: string; productId?: number; costCenterId?: number } = {}) { const db = await getDb(); if (!db) return []; const rows = await db.select().from(costDistributions); return rows.filter(row => (!input.period || row.period === input.period) && (!input.productId || row.productId === input.productId) && (!input.costCenterId || row.costCenterId === input.costCenterId)); }
+export async function createCostDistribution(input: typeof costDistributions.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(costDistributions).values(input); }
+export async function getProductCostProfitability(input: { productId?: number; costCenterId?: number; period?: string } = {}) {
+  const db = await getDb(); if (!db) return { rows: [], totals: { revenue: 0, cost: 0, profit: 0, margin: 0 } };
+  const productRows = await db.select().from(products).where(eq(products.isActive, true));
+  const costRows = await db.select().from(costDistributions);
+  const invoiceRows = await db.select({ productId: invoiceLines.productId, quantity: invoiceLines.quantity, lineTotal: invoiceLines.lineTotal, invoiceDate: invoices.invoiceDate, type: invoices.type }).from(invoiceLines).innerJoin(invoices, eq(invoiceLines.invoiceId, invoices.id));
+  const rows = productRows.filter(product => !input.productId || product.id === input.productId).map(product => { const revenue = invoiceRows.filter(row => row.productId === product.id && row.type === "sale" && (!input.period || row.invoiceDate.toISOString().slice(0, 7) === input.period)).reduce((sum, row) => sum + Number(row.lineTotal), 0); const cost = costRows.filter(row => row.productId === product.id && (!input.period || row.period === input.period) && (!input.costCenterId || row.costCenterId === input.costCenterId)).reduce((sum, row) => sum + Number(row.amount), 0); const profit = revenue - cost; return { productId: product.id, sku: product.sku, name: product.name, productClass: product.productClass, revenue, cost, profit, margin: revenue ? (profit / revenue) * 100 : 0 }; });
+  const totals = rows.reduce((acc, row) => ({ revenue: acc.revenue + row.revenue, cost: acc.cost + row.cost, profit: acc.profit + row.profit, margin: 0 }), { revenue: 0, cost: 0, profit: 0, margin: 0 }); totals.margin = totals.revenue ? (totals.profit / totals.revenue) * 100 : 0; return { rows, totals };
 }
 
 export async function createProduct(input: typeof products.$inferInsert) { const db = await getDb(); if (!db) throw new Error("قاعدة البيانات غير متاحة"); return db.insert(products).values(input); }

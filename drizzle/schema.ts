@@ -73,6 +73,8 @@ export const parties = mysqlTable("parties", {
 export const products = mysqlTable("products", {
   id: int("id").autoincrement().primaryKey(),
   sku: varchar("sku", { length: 64 }).notNull().unique(),
+  productClass: mysqlEnum("productClass", ["raw_material", "semi_finished", "finished_product"]).default("raw_material").notNull(),
+  classificationNote: varchar("classificationNote", { length: 240 }),
   barcode: varchar("barcode", { length: 80 }),
   name: varchar("name", { length: 180 }).notNull(),
   unit: varchar("unit", { length: 32 }).default("قطعة").notNull(),
@@ -273,7 +275,7 @@ export const costElements = mysqlTable("costElements", {
   id: int("id").autoincrement().primaryKey(),
   code: varchar("code", { length: 40 }).notNull().unique(),
   name: varchar("name", { length: 160 }).notNull(),
-  category: mysqlEnum("category", ["material", "labor", "overhead", "other"]).notNull(),
+  category: mysqlEnum("category", ["material", "material_overhead", "resource", "labor", "overhead", "outside_processing", "other"]).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -298,6 +300,82 @@ export const costAllocations = mysqlTable("costAllocations", {
   allocationRate: decimal("allocationRate", { precision: 9, scale: 4 }).default("0").notNull(),
   period: varchar("period", { length: 7 }).notNull(),
   description: varchar("description", { length: 240 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export const costTypes = mysqlTable("costTypes", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 40 }).notNull().unique(),
+  name: varchar("name", { length: 160 }).notNull(),
+  scenario: mysqlEnum("scenario", ["actual", "standard", "budget", "simulation"]).notNull(),
+  affectsInventoryValuation: boolean("affectsInventoryValuation").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export const costingMethods = mysqlTable("costingMethods", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 40 }).notNull().unique(),
+  name: varchar("name", { length: 160 }).notNull(),
+  method: mysqlEnum("method", ["standard", "perpetual_average", "periodic_average", "fifo"]).notNull(),
+  isOfficial: boolean("isOfficial").default(false).notNull(),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export const boms = mysqlTable("boms", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId").notNull(),
+  version: varchar("version", { length: 32 }).notNull(),
+  quantity: decimal("quantity", { precision: 18, scale: 3 }).default("1").notNull(),
+  status: mysqlEnum("status", ["draft", "active", "archived"]).default("draft").notNull(),
+  costingMethodId: int("costingMethodId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export const bomLines = mysqlTable("bomLines", {
+  id: int("id").autoincrement().primaryKey(),
+  bomId: int("bomId").notNull(),
+  componentProductId: int("componentProductId").notNull(),
+  quantity: decimal("quantity", { precision: 18, scale: 4 }).notNull(),
+  scrapRate: decimal("scrapRate", { precision: 9, scale: 4 }).default("0").notNull(),
+  costCenterId: int("costCenterId"),
+  sequence: int("sequence").default(1).notNull(),
+});
+export const workOrders = mysqlTable("workOrders", {
+  id: int("id").autoincrement().primaryKey(),
+  orderNumber: varchar("orderNumber", { length: 48 }).notNull().unique(),
+  productId: int("productId").notNull(),
+  bomId: int("bomId"),
+  costCenterId: int("costCenterId"),
+  plannedQuantity: decimal("plannedQuantity", { precision: 18, scale: 3 }).notNull(),
+  completedQuantity: decimal("completedQuantity", { precision: 18, scale: 3 }).default("0").notNull(),
+  status: mysqlEnum("status", ["planned", "released", "in_progress", "completed", "closed", "cancelled"]).default("planned").notNull(),
+  plannedStart: timestamp("plannedStart"),
+  plannedEnd: timestamp("plannedEnd"),
+  actualMaterialCost: decimal("actualMaterialCost", { precision: 18, scale: 2 }).default("0").notNull(),
+  actualResourceCost: decimal("actualResourceCost", { precision: 18, scale: 2 }).default("0").notNull(),
+  actualOverheadCost: decimal("actualOverheadCost", { precision: 18, scale: 2 }).default("0").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+export const workOrderOperations = mysqlTable("workOrderOperations", {
+  id: int("id").autoincrement().primaryKey(),
+  workOrderId: int("workOrderId").notNull(),
+  sequence: int("sequence").notNull(),
+  name: varchar("name", { length: 160 }).notNull(),
+  costCenterId: int("costCenterId"),
+  resourceRate: decimal("resourceRate", { precision: 18, scale: 2 }).default("0").notNull(),
+  plannedHours: decimal("plannedHours", { precision: 18, scale: 3 }).default("0").notNull(),
+  actualHours: decimal("actualHours", { precision: 18, scale: 3 }).default("0").notNull(),
+  outsideProcessingCost: decimal("outsideProcessingCost", { precision: 18, scale: 2 }).default("0").notNull(),
+  status: mysqlEnum("status", ["planned", "started", "completed"]).default("planned").notNull(),
+});
+export const costDistributions = mysqlTable("costDistributions", {
+  id: int("id").autoincrement().primaryKey(),
+  period: varchar("period", { length: 7 }).notNull(),
+  productId: int("productId").notNull(),
+  costCenterId: int("costCenterId").notNull(),
+  costElementId: int("costElementId").notNull(),
+  basis: mysqlEnum("basis", ["material", "resource", "overhead", "outside_processing"]).notNull(),
+  amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+  sourceType: varchar("sourceType", { length: 48 }).notNull(),
+  sourceId: int("sourceId"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
