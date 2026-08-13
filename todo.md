@@ -237,3 +237,6 @@
 - [x] Configure a GitHub Pages-compatible static frontend build, repository-base routing, deployment workflow, and backend limitation documentation
 
 - [x] Fix the GitHub Pages 404 at the Sky ERP public URL or document and verify a working non-Pages full-stack access path
+
+- [x] Prepare LAN deployment mode with one shared backend/database host, client access instructions, and secure local-network configuration
+- [ ] Produce and verify a distributable Windows installer or executable for the LAN server/client

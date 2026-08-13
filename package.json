@@ -8,6 +8,7 @@
     "build": "vite build && esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "build:pages": "vite build",
     "start": "NODE_ENV=production node dist/index.js",
+    "start:lan": "NODE_ENV=production HOST=0.0.0.0 node dist/index.js",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
