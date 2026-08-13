@@ -1,0 +1,39 @@
+name: Build Sky ERP Windows installer
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        shell: pwsh
+        run: npm install --global pnpm@10.4.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+
+      - name: Build Windows installer
+        run: pnpm run desktop:build
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sky-erp-windows-installer
+          path: release/*
+          if-no-files-found: error

@@ -2,6 +2,7 @@
   "name": "enterprise-erp",
   "version": "1.0.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "license": "MIT",
   "scripts": {
     "dev": "NODE_ENV=development tsx watch server/_core/index.ts",
@@ -9,6 +10,7 @@
     "build:pages": "vite build",
     "start": "NODE_ENV=production node dist/index.js",
     "start:lan": "NODE_ENV=production HOST=0.0.0.0 node dist/index.js",
+    "desktop:build": "pnpm build && electron-builder --win nsis",
     "check": "tsc --noEmit",
     "format": "prettier --write .",
     "test": "vitest run",
@@ -97,6 +99,8 @@
     "add": "^2.0.6",
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.4",
+    "electron": "^43.4.0",
+    "electron-builder": "^26.15.3",
     "esbuild": "^0.25.0",
     "jsdom": "^30.0.1",
     "pnpm": "^10.15.1",
@@ -111,6 +115,30 @@
     "vitest": "^2.1.4"
   },
   "packageManager": "pnpm@10.4.1+sha512.c753b6c3ad7afa13af388fa6d808035a008e30ea9993f58c6663e2bc5ff21679aa834db094987129aa4d488b86df57f7b634981b2f827cdcacc698cc0cfb88af",
+  "build": {
+    "appId": "com.skyerp.desktop",
+    "productName": "Sky ERP",
+    "asar": true,
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": ["nsis"],
+      "artifactName": "Sky-ERP-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
   "pnpm": {
     "patchedDependencies": {
       "wouter@3.7.1": "patches/wouter@3.7.1.patch"
