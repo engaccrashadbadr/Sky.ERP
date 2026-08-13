@@ -240,3 +240,6 @@
 
 - [x] Prepare LAN deployment mode with one shared backend/database host, client access instructions, and secure local-network configuration
 - [x] Produce and verify a distributable Windows installer or executable for the LAN server/client
+
+- [ ] Add optional shared LAN Client EXE and Server EXE packaging while preserving the existing all-in-one EXE mode
+- [ ] Add live shared-data update signaling and document central-server/client configuration

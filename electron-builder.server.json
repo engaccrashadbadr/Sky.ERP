@@ -1,0 +1,10 @@
+{
+  "appId": "com.skyerp.server",
+  "productName": "Sky ERP Server",
+  "asar": true,
+  "extraMetadata": { "main": "electron/server.cjs" },
+  "files": ["dist/**/*", "electron/**/*", "package.json", "node_modules/**/*"],
+  "directories": { "output": "release/server" },
+  "win": { "target": ["nsis"], "artifactName": "Sky-ERP-Server-Setup-${version}.${ext}" },
+  "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true }
+}

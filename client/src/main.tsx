@@ -72,6 +72,14 @@ const trpcClient = trpc.createClient({
   ],
 });
 
+if (typeof window !== "undefined") {
+  window.setInterval(() => {
+    if (document.visibilityState === "visible") {
+      void queryClient.refetchQueries({ type: "active" });
+    }
+  }, 8000);
+}
+
 createRoot(document.getElementById("root")!).render(
   <trpc.Provider client={trpcClient} queryClient={queryClient}>
     <QueryClientProvider client={queryClient}>

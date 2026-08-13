@@ -1,0 +1,10 @@
+{
+  "appId": "com.skyerp.client",
+  "productName": "Sky ERP Client",
+  "asar": true,
+  "extraMetadata": { "main": "electron/client.cjs" },
+  "files": ["dist/**/*", "electron/**/*", "package.json", "node_modules/**/*"],
+  "directories": { "output": "release/client" },
+  "win": { "target": ["nsis"], "artifactName": "Sky-ERP-Client-Setup-${version}.${ext}" },
+  "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true, "createDesktopShortcut": true, "createStartMenuShortcut": true }
+}
