@@ -235,3 +235,5 @@
 - [x] Upload all remaining local project files and commits to GitHub and verify complete synchronization
 
 - [x] Configure a GitHub Pages-compatible static frontend build, repository-base routing, deployment workflow, and backend limitation documentation
+
+- [ ] Fix the GitHub Pages 404 at the Sky ERP public URL or document and verify a working non-Pages full-stack access path
